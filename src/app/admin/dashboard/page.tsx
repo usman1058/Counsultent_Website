@@ -159,10 +159,10 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's an overview of your site.</p>
         </div>
-        <Link href="/admin/pages">
+        <Link href="/admin/study-pages">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Create New Page
+            Create New Destinations
           </Button>
         </Link>
       </div>
