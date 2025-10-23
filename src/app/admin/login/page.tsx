@@ -36,23 +36,11 @@ export default function AdminLogin() {
         email,
         password,
         redirect: true,
-        callbackUrl: '/admin/dashboard'
+        callbackUrl: '/admin/dashboard', // this ensures it lands here
       })
 
-      // If signIn returns without error, check session and redirect
-      if (!result?.error) {
-        // Wait a moment for session to be established
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        // Verify session exists before redirecting
-        const session = await getSession()
-        if (session) {
-          router.push('/admin/dashboard')
-          router.refresh()
-        } else {
-          setError('Login failed. Please check your credentials.')
-        }
-      } else {
+      // ⚠️ No need to manually push — NextAuth will handle redirect
+      if (result?.error) {
         setError('Invalid email or password')
       }
     } catch (error) {
@@ -61,6 +49,7 @@ export default function AdminLogin() {
       setIsLoading(false)
     }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

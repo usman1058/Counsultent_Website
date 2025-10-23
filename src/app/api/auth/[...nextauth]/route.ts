@@ -67,18 +67,8 @@ export const authOptions = {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Always use relative redirects to work in any environment
+      if (url.includes("/admin/dashboard")) return "/admin/dashboard"
       if (url.startsWith("/")) return url
-      // If it's an absolute URL on the same origin, make it relative
-      try {
-        const urlObj = new URL(url)
-        if (urlObj.origin === baseUrl) {
-          return urlObj.pathname + urlObj.search + urlObj.hash
-        }
-      } catch {
-        // If URL parsing fails, return relative dashboard URL
-      }
-      // Default to dashboard
       return "/admin/dashboard"
     }
   }
