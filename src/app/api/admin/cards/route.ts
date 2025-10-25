@@ -49,7 +49,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, imageUrl, categoryId } = body
+    const { 
+      title, 
+      description, 
+      imageUrl, 
+      categoryId,
+      cardCategory,
+      duration,
+      location,
+      intake,
+      requirements,
+      isActive,
+      link,
+      blocks
+    } = body
 
     if (!title || !description || !categoryId) {
       return NextResponse.json({ error: 'Title, description, and category are required' }, { status: 400 })
@@ -64,14 +77,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 
+    // Create card with new fields
     const card = await db.card.create({
       data: {
         title,
-        description,
+        description, // Now JSON
         imageUrl: imageUrl || null,
-        categoryId: parseInt(categoryId)
+        categoryId: parseInt(categoryId),
+        cardCategory: cardCategory || null,
+        duration: duration || null,
+        location: location || null,
+        intake: intake || null,
+        requirements: requirements || null,
+        isActive: isActive !== undefined ? isActive : true,
+        link: link || null
       }
     })
+
+    // Create blocks if provided
+    if (blocks && blocks.length > 0) {
+      await db.cardBlock.createMany({
+        data: blocks.map((block: any) => ({
+          title: block.title,
+          value: block.value,
+          icon: block.icon || null,
+          cardId: card.id
+        }))
+      })
+    }
 
     return NextResponse.json(card)
   } catch (error) {

@@ -62,7 +62,7 @@ model Category {
 model Card {
   id          Int         @id @default(autoincrement())
   title       String
-  description String
+  description Json        // Changed to JSON for structured content
   imageUrl    String?
   cardCategory String?
   duration    String?
@@ -70,12 +70,23 @@ model Card {
   intake      String?
   requirements String?
   categoryId  Int
+  isActive    Boolean     @default(true) // New field for active/inactive status
+  link        String?     // New field for button link
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   details     DetailPage?
-  
-  @@unique([categoryId, title])
+  blocks      CardBlock[] // New relation for dynamic blocks
+}
+
+// New model for dynamic blocks
+model CardBlock {
+  id      Int    @id @default(autoincrement())
+  title   String // e.g., "Duration"
+  value   String // e.g., "4 years"
+  icon    String? // URL to an icon
+  cardId  Int
+  card    Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
 }
 
 model DetailPage {

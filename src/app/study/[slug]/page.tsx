@@ -26,6 +26,8 @@ interface StudyPageData {
       location: string | null
       intake: string | null
       requirements: string | null
+      isActive: boolean
+      link: string | null
     }[]
   }[]
 }
