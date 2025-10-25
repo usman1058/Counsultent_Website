@@ -21,8 +21,8 @@ const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
   phone: z.string().min(10, 'Please enter a valid phone number'),
-  purpose: z.enum(['Study Visa', 'Admission Help', 'Scholarship', 'General'], {
-    required_error: 'Please select a purpose of inquiry'
+  purpose: z.enum(['Study Visa', 'Admission Help', 'Scholarship', 'General'] as const, {
+    message: 'Please select a purpose of inquiry'
   }),
   message: z.string().min(10, 'Message must be at least 10 characters')
 })
@@ -134,14 +134,15 @@ export default function ContactPage() {
                   <Mail className="w-5 h-5 text-primary mt-1" />
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-sm text-gray-600">info@studyabroadwithhadi.info</p>
+                    <p className="text-sm text-gray-600">team@studyabroadwithhadi.info</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
                   <Phone className="w-5 h-5 text-primary mt-1" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <p className="text-sm text-gray-600">+1-234-567-8900</p>
+                    <p className="text-sm text-gray-600">+92-315-9704384</p>
+                    <p className="text-sm text-gray-600">+92-328-4238786</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -149,23 +150,64 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium">Address</p>
                     <p className="text-sm text-gray-600">
-                      123 Education Street<br />
-                      Learning City, LC 12345<br />
-                      United States
+                      Office # 3, 4th Floor <br />
+                      Shan Arcade Plaza <br />
+                      Barkat Market, Garden Town<br />
+                      Lahore, Pakistan
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <Clock className="w-5 h-5 text-primary mt-1" />
-                  <div>
-                    <p className="font-medium">Business Hours</p>
-                    <p className="text-sm text-gray-600">
-                      Monday - Friday: 9:00 AM - 6:00 PM<br />
-                      Saturday: 10:00 AM - 4:00 PM<br />
-                      Sunday: Closed
-                    </p>
-                  </div>
-                </div>
+                <div className="flex items-start gap-4 p-4 rounded-2xl border border-gray-200 shadow-sm bg-white dark:bg-gray-900 dark:border-gray-800 transition-all hover:shadow-md">
+  <div className="p-2 rounded-xl bg-primary/10 text-primary">
+    <Mail className="w-6 h-6" />
+  </div>
+
+  <div className="space-y-2">
+    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+      Community & Groups
+    </h3>
+    <p className="text-sm text-gray-600 dark:text-gray-400">
+      Connect with like-minded people and stay updated through our WhatsApp community.
+    </p>
+
+    <div className="flex flex-wrap gap-3 pt-1">
+      <a
+        href="https://chat.whatsapp.com/Icvo2g7q7FMJOUpCoEKY4w?mode=wwt"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1.5 rounded-lg transition-colors duration-200"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+          className="w-4 h-4"
+        >
+          <path d="M13.601 2.326A7.936 7.936 0 0 0 8.002 0a7.942 7.942 0 0 0-7.99 7.942c0 1.401.37 2.77 1.075 3.977L0 16l4.22-1.11A7.915 7.915 0 0 0 8 15.884h.002a7.946 7.946 0 0 0 7.992-7.941 7.9 7.9 0 0 0-2.393-5.617zM8.002 14.48h-.002a6.54 6.54 0 0 1-3.326-.91l-.238-.14-2.504.658.667-2.44-.155-.25A6.516 6.516 0 0 1 1.462 7.94a6.48 6.48 0 0 1 6.54-6.482 6.48 6.48 0 0 1 6.537 6.482 6.484 6.484 0 0 1-6.537 6.54zm3.66-4.87c-.201-.1-1.187-.586-1.37-.65-.183-.068-.316-.1-.45.1-.134.2-.516.65-.632.785-.116.133-.234.15-.435.05-.2-.1-.846-.312-1.61-.995-.595-.53-.995-1.18-1.113-1.38-.116-.2-.012-.3.087-.4.09-.09.2-.234.3-.35.1-.117.134-.2.2-.334.066-.133.033-.25-.017-.35-.05-.1-.45-1.08-.616-1.48-.163-.392-.328-.34-.45-.35-.116-.008-.25-.01-.384-.01a.74.74 0 0 0-.534.25c-.184.2-.7.683-.7 1.67s.717 1.94.816 2.08c.1.133 1.412 2.2 3.416 3.08.478.205.85.327 1.14.418.478.152.913.13 1.257.08.383-.058 1.187-.48 1.354-.944.167-.467.167-.867.116-.947-.05-.08-.183-.133-.384-.234z" />
+        </svg>
+        Join WhatsApp Group
+      </a>
+
+      <a
+        href="https://whatsapp.com/channel/0029VawOpwNFsn0XfoWbgO2H"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1.5 rounded-lg transition-colors duration-200"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+          className="w-4 h-4"
+        >
+          <path d="M13.601 2.326A7.936 7.936 0 0 0 8.002 0a7.942 7.942 0 0 0-7.99 7.942c0 1.401.37 2.77 1.075 3.977L0 16l4.22-1.11A7.915 7.915 0 0 0 8 15.884h.002a7.946 7.946 0 0 0 7.992-7.941 7.9 7.9 0 0 0-2.393-5.617zM8.002 14.48h-.002a6.54 6.54 0 0 1-3.326-.91l-.238-.14-2.504.658.667-2.44-.155-.25A6.516 6.516 0 0 1 1.462 7.94a6.48 6.48 0 0 1 6.54-6.482 6.48 6.48 0 0 1 6.537 6.482 6.484 6.484 0 0 1-6.537 6.54zm3.66-4.87c-.201-.1-1.187-.586-1.37-.65-.183-.068-.316-.1-.45.1-.134.2-.516.65-.632.785-.116.133-.234.15-.435.05-.2-.1-.846-.312-1.61-.995-.595-.53-.995-1.18-1.113-1.38-.116-.2-.012-.3.087-.4.09-.09.2-.234.3-.35.1-.117.134-.2.2-.334.066-.133.033-.25-.017-.35-.05-.1-.45-1.08-.616-1.48-.163-.392-.328-.34-.45-.35-.116-.008-.25-.01-.384-.01a.74.74 0 0 0-.534.25c-.184.2-.7.683-.7 1.67s.717 1.94.816 2.08c.1.133 1.412 2.2 3.416 3.08.478.205.85.327 1.14.418.478.152.913.13 1.257.08.383-.058 1.187-.48 1.354-.944.167-.467.167-.867.116-.947-.05-.08-.183-.133-.384-.234z" />
+        </svg>
+        Join WhatsApp Channel
+      </a>
+    </div>
+  </div>
+</div>
+
               </CardContent>
             </Card>
 
