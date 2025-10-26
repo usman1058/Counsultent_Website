@@ -88,6 +88,7 @@ export async function PUT(
               icon: block.icon || null,
               cardId: parseInt(id)
             }))
+          })
         }
       } catch (error) {
         console.log('CardBlock model does not exist, skipping blocks update')
