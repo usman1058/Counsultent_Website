@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next/auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
 // Function to check if a column exists
 async function columnExists(tableName: string, columnName: string) {
   try {
-    const result = await db.$queryRaw`
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = ? 
-      AND COLUMN_NAME = ?
-    `, [tableName, columnName]
+      const result = await db.$queryRaw(
+        Prisma.sql`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ${Prisma.raw(tableName)} AND COLUMN_NAME = ${Prisma.raw(columnName)}`
+      )
     return Array.isArray(result) && result.length > 0
   } catch (error) {
     console.log('Error checking column existence:', error)
@@ -25,7 +22,9 @@ async function addColumnIfNotExists(tableName: string, columnName: string, colum
   try {
     const exists = await columnExists(tableName, columnName)
     if (!exists) {
-      await db.$executeRaw(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${columnDefinition}`)
+          await db.$executeRaw(
+            Prisma.sql`ALTER TABLE \`${Prisma.raw(tableName)}\` ADD COLUMN \`${Prisma.raw(columnName)}\` ${Prisma.raw(columnDefinition)}`
+          )
       console.log(`Added ${columnName} column to ${tableName} table`)
       return true
     }
@@ -39,12 +38,9 @@ async function addColumnIfNotExists(tableName: string, columnName: string, colum
 // Function to check if a table exists
 async function tableExists(tableName: string) {
   try {
-    const result = await db.$queryRaw`
-      SELECT TABLE_NAME 
-      FROM INFORMATION_SCHEMA.TABLES 
-      WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = ?
-    `, [tableName])
+      const result = await db.$queryRaw(
+        Prisma.sql`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ${Prisma.raw(tableName)}`
+      )
     return Array.isArray(result) && result.length > 0
   } catch (error) {
     console.log('Error checking table existence:', error)
@@ -57,7 +53,7 @@ async function createTableIfNotExists(tableName: string, createStatement: string
   try {
     const exists = await tableExists(tableName)
     if (!exists) {
-      await db.$executeRaw(createStatement)
+          await db.$executeRaw(Prisma.sql([createStatement], []))
       console.log(`Created ${tableName} table`)
       return true
     }
@@ -232,7 +228,9 @@ export async function PUT(
     })
   } catch (error) {
     console.error('Failed to update card:', error)
-    return NextResponse.json({ error: 'Failed to update card', details: error.message }, { status: 500 })
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) errorMessage = error.message;
+      return NextResponse.json({ error: 'Failed to update card', details: errorMessage }, { status: 500 })
   }
 }
 
@@ -255,6 +253,8 @@ export async function DELETE(
     return NextResponse.json({ message: 'Card deleted successfully' })
   } catch (error) {
     console.error('Failed to delete card:', error)
-    return NextResponse.json({ error: 'Failed to delete card', details: error.message }, { status: 500 })
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) errorMessage = error.message;
+      return NextResponse.json({ error: 'Failed to delete card', details: errorMessage }, { status: 500 })
   }
 }
