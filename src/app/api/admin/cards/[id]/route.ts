@@ -3,6 +3,20 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/db'
 
+// Function to check if a column exists in a table
+async function columnExists(tableName: string, columnName: string) {
+  try {
+    const result = await db.$queryRaw`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
+    `, [tableName, columnName]
+    return Array.isArray(result) && result.length > 0
+  } catch (error) {
+    return false
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -44,6 +58,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 
+    // Check which columns exist in the database
+    const [isActiveExists, linkExists] = await Promise.all([
+      columnExists('Card', 'isActive'),
+      columnExists('Card', 'link')
+    ])
+
     // Build update data with only fields that exist in the database
     const updateData: any = {
       title,
@@ -53,17 +73,18 @@ export async function PUT(
 
     // Add optional fields if they exist in the schema
     try {
-      // Try to include these fields, but don't fail if they don't exist
       if (cardCategory !== undefined) updateData.cardCategory = cardCategory
       if (duration !== undefined) updateData.duration = duration
       if (location !== undefined) updateData.location = location
       if (intake !== undefined) updateData.intake = intake
       if (requirements !== undefined) updateData.requirements = requirements
+      if (isActiveExists && isActive !== undefined) updateData.isActive = isActive
+      if (linkExists && link !== undefined) updateData.link = link
     } catch (error) {
       console.log('Some fields may not exist in the database schema:', error)
     }
 
-    // Update the card
+    // Update the card with all available fields
     const card = await db.card.update({
       where: { id: parseInt(id) },
       data: updateData
@@ -81,30 +102,6 @@ export async function PUT(
       })
     } catch (error) {
       console.log('Failed to update category relationship:', error)
-    }
-
-    // Handle isActive field separately if it exists
-    try {
-      if (isActive !== undefined) {
-        await db.card.update({
-          where: { id: parseInt(id) },
-          data: { isActive }
-        })
-      }
-    } catch (error) {
-      console.log('isActive field does not exist in database schema')
-    }
-
-    // Handle link field separately if it exists
-    try {
-      if (link !== undefined) {
-        await db.card.update({
-          where: { id: parseInt(id) },
-          data: { link }
-        })
-      }
-    } catch (error) {
-      console.log('link field does not exist in database schema')
     }
 
     // Update blocks if provided and if CardBlock model exists
@@ -131,7 +128,26 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json(card)
+    // Provide feedback about which fields were updated
+    const feedback = {
+      message: 'Card updated successfully',
+      updatedFields: {
+        title: true,
+        description: true,
+        imageUrl: imageUrl !== null,
+        cardCategory: cardCategory !== undefined,
+        duration: duration !== undefined,
+        location: location !== undefined,
+        intake: intake !== undefined,
+        requirements: requirements !== undefined,
+        isActive: isActiveExists && isActive !== undefined,
+        link: linkExists && link !== undefined,
+        category: true,
+        blocks: blocks !== undefined && blocks.length > 0
+      }
+    }
+
+    return NextResponse.json(feedback)
   } catch (error) {
     console.error('Failed to update card:', error)
     return NextResponse.json({ error: 'Failed to update card' }, { status: 500 })
