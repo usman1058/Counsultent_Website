@@ -7,23 +7,21 @@ import { db } from '@/lib/db'
 async function columnExists(tableName: string, columnName: string) {
   try {
     const result = await db.$queryRaw`
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
-    `, [tableName, columnName]
-    return Array.isArray(result) && result.length > 0
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ${tableName} AND COLUMN_NAME = ${columnName}
+    `;
+    return Array.isArray(result) && result.length > 0;
   } catch (error) {
-    return false
+    return false;
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    const { id } = await params
+  const session = await getServerSession(authOptions)
+  const { id } = params
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -156,11 +154,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    const { id } = await params
+  const session = await getServerSession(authOptions)
+  const { id } = params
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
