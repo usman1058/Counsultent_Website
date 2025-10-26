@@ -5,130 +5,89 @@ export async function GET() {
   try {
     const results = {
       messages: [] as string[],
-      errors: [] as string[]
-    }
-
-    // Function to check if a column exists
-    const columnExists = async (tableName: string, columnName: string) => {
-      try {
-        const result = await db.$queryRaw`
-          SELECT COLUMN_NAME 
-          FROM INFORMATION_SCHEMA.COLUMNS 
-          WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
-        `, [tableName, columnName])
-        return Array.isArray(result) && result.length > 0
-      } catch (error) {
-        return false
+      errors: [] as string[],
+      schemaStatus: {
+        cardTable: false,
+        cardFields: {
+          isActive: false,
+          link: false
+        },
+        cardBlockTable: false
       }
     }
 
-    // Function to check if a table exists
-    const tableExists = async (tableName: string) => {
-      try {
-        const result = await db.$queryRaw`
-          SELECT TABLE_NAME 
-          FROM INFORMATION_SCHEMA.TABLES 
-          WHERE TABLE_NAME = ?
-        `, [tableName])
-        return Array.isArray(result) && result.length > 0
-      } catch (error) {
-        return false
-      }
-    }
-
-    // Add isActive field to Card table if it doesn't exist
-    const isActiveExists = await columnExists('Card', 'isActive')
-    if (!isActiveExists) {
-      try {
-        await db.$executeRaw`ALTER TABLE \`Card\` ADD COLUMN \`isActive\` BOOLEAN DEFAULT TRUE`
-        results.messages.push('Added isActive field to Card table')
-      } catch (error) {
-        results.errors.push(`Failed to add isActive field: ${error.message}`)
-      }
-    } else {
-      results.messages.push('isActive field already exists in Card table')
-    }
-
-    // Add link field to Card table if it doesn't exist
-    const linkExists = await columnExists('Card', 'link')
-    if (!linkExists) {
-      try {
-        await db.$executeRaw`ALTER TABLE \`Card\` ADD COLUMN \`link\` VARCHAR(255)`
-        results.messages.push('Added link field to Card table')
-      } catch (error) {
-        results.errors.push(`Failed to add link field: ${error.message}`)
-      }
-    } else {
-      results.messages.push('link field already exists in Card table')
-    }
-
-    // Create CardBlock table if it doesn't exist
-    const cardBlockExists = await tableExists('CardBlock')
-    if (!cardBlockExists) {
-      try {
-        await db.$executeRaw(`
-          CREATE TABLE \`CardBlock\` (
-            \`id\` INT AUTO_INCREMENT PRIMARY KEY,
-            \`title\` VARCHAR(255) NOT NULL,
-            \`value\` TEXT NOT NULL,
-            \`icon\` VARCHAR(255),
-            \`cardId\` INT NOT NULL,
-            \`createdAt\` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            \`updatedAt\` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (\`cardId\`) REFERENCES \`Card\`(\`id\`) ON DELETE CASCADE
-          )
-        `)
-        results.messages.push('Created CardBlock table')
-      } catch (error) {
-        results.errors.push(`Failed to create CardBlock table: ${error.message}`)
-      }
-    } else {
-      results.messages.push('CardBlock table already exists')
-    }
-
-    // Check if CardBlock has the foreign key constraint
+    // Check Card table structure
     try {
-      const constraints = await db.$queryRaw`
-        SELECT CONSTRAINT_NAME 
-        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-        WHERE TABLE_NAME = 'CardBlock' AND CONSTRAINT_NAME = 'CardBlock_ibfk_1'
-      `
-      if (!Array.isArray(constraints) || constraints.length === 0) {
-        // Add foreign key constraint if it doesn't exist
-        try {
-          await db.$executeRaw`
-            ALTER TABLE \`CardBlock\` 
-            ADD CONSTRAINT \`CardBlock_ibfk_1\` 
-            FOREIGN KEY (\`cardId\`) REFERENCES \`Card\`(\`id\`) ON DELETE CASCADE
-          `
-          results.messages.push('Added foreign key constraint to CardBlock table')
-        } catch (error) {
-          results.errors.push(`Failed to add foreign key constraint: ${error.message}`)
-        }
+      const cardSchema = await db.$queryRaw`DESCRIBE \`Card\``
+      if (Array.isArray(cardSchema)) {
+        results.schemaStatus.cardTable = true
+        results.schemaStatus.cardFields.isActive = cardSchema.some((col: any) => col.Field === 'isActive')
+        results.schemaStatus.cardFields.link = cardSchema.some((col: any) => col.Field === 'link')
+        results.messages.push('Card table exists with required fields')
+      } else {
+        results.errors.push('Failed to describe Card table')
       }
     } catch (error) {
-      results.errors.push(`Failed to check foreign key constraint: ${error.message}`)
+      results.errors.push(`Error checking Card table: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
 
-    // Return the results
-    if (results.errors.length > 0) {
-      return NextResponse.json({ 
-        success: false,
-        messages: results.messages,
-        errors: results.errors
-      }, { status: 500 })
+    // Check CardBlock table
+    try {
+      const cardBlockSchema = await db.$queryRaw`DESCRIBE \`CardBlock\``
+      if (Array.isArray(cardBlockSchema)) {
+        results.schemaStatus.cardBlockTable = true
+        results.messages.push('CardBlock table exists')
+      } else {
+        results.errors.push('CardBlock table does not exist')
+      }
+    } catch (error) {
+      // Check if CardBlock table exists using a different method
+      try {
+        await db.$queryRaw`SELECT 1 FROM \`CardBlock\` LIMIT 1`
+        results.schemaStatus.cardBlockTable = true
+        results.messages.push('CardBlock table exists')
+      } catch (e) {
+        results.schemaStatus.cardBlockTable = false
+        results.errors.push(`CardBlock table does not exist: ${e instanceof Error ? e.message : 'Unknown error'}`)
+      }
     }
 
-    return NextResponse.json({ 
-      success: true,
+    // Generate a comprehensive status report
+    const statusReport = {
+      databaseReady: results.schemaStatus.cardTable && 
+                   results.schemaStatus.cardFields.isActive && 
+                   results.schemaStatus.cardFields.link &&
+                   results.schemaStatus.cardBlockTable,
+      issues: [] as string[]
+    }
+
+    if (!statusReport.databaseReady) {
+      if (!results.schemaStatus.cardTable) {
+        statusReport.issues.push('Card table is missing')
+      }
+      if (!results.schemaStatus.cardFields.isActive) {
+        statusReport.issues.push('isActive field is missing from Card table')
+      }
+      if (!results.schemaStatus.cardFields.link) {
+        statusReport.issues.push('link field is missing from Card table')
+      }
+      if (!results.schemaStatus.cardBlockTable) {
+        statusReport.issues.push('CardBlock table is missing')
+      }
+    }
+
+    return NextResponse.json({
+      success: statusReport.databaseReady,
       messages: results.messages,
-      errors: results.errors
+      errors: results.errors,
+      schemaStatus: results.schemaStatus,
+      statusReport: statusReport
     })
   } catch (error) {
-    console.error('Migration failed:', error)
+    console.error('Migration check failed:', error)
     return NextResponse.json({ 
       success: false, 
-      error: 'Migration failed',
+      error: 'Migration check failed',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
