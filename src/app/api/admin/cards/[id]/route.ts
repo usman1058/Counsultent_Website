@@ -85,7 +85,8 @@ export async function PUT(
     // Try to update isActive field using raw SQL
     if (isActive !== undefined) {
       try {
-        await db.$executeRaw`UPDATE \`Card\` SET \`isActive\` = ? WHERE \`id\` = ?`, [isActive, parseInt(id)])
+        const sql = 'UPDATE `Card` SET `isActive` = ? WHERE `id` = ?'
+        await db.$executeRawUnsafe(sql, [isActive, parseInt(id)])
         console.log('Updated isActive field using raw SQL')
       } catch (error) {
         console.log('Failed to update isActive field:', error)
@@ -95,7 +96,8 @@ export async function PUT(
     // Try to update link field using raw SQL
     if (link !== undefined) {
       try {
-        await db.$executeRaw`UPDATE \`Card\` SET \`link\` = ? WHERE \`id\` = ?`, [link, parseInt(id)])
+        const sql = 'UPDATE `Card` SET `link` = ? WHERE `id` = ?'
+        await db.$executeRawUnsafe(sql, [link, parseInt(id)])
         console.log('Updated link field using raw SQL')
       } catch (error) {
         console.log('Failed to update link field:', error)
