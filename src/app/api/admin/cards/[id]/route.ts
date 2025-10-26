@@ -59,8 +59,6 @@ export async function PUT(
       if (location !== undefined) updateData.location = location
       if (intake !== undefined) updateData.intake = intake
       if (requirements !== undefined) updateData.requirements = requirements
-      if (isActive !== undefined) updateData.isActive = isActive
-      if (link !== undefined) updateData.link = link
     } catch (error) {
       console.log('Some fields may not exist in the database schema:', error)
     }
@@ -71,7 +69,7 @@ export async function PUT(
       data: updateData
     })
 
-    // Update the category relationship separately if needed
+    // Update the category relationship separately
     try {
       await db.card.update({
         where: { id: parseInt(id) },
@@ -83,6 +81,30 @@ export async function PUT(
       })
     } catch (error) {
       console.log('Failed to update category relationship:', error)
+    }
+
+    // Handle isActive field separately if it exists
+    try {
+      if (isActive !== undefined) {
+        await db.card.update({
+          where: { id: parseInt(id) },
+          data: { isActive }
+        })
+      }
+    } catch (error) {
+      console.log('isActive field does not exist in database schema')
+    }
+
+    // Handle link field separately if it exists
+    try {
+      if (link !== undefined) {
+        await db.card.update({
+          where: { id: parseInt(id) },
+          data: { link }
+        })
+      }
+    } catch (error) {
+      console.log('link field does not exist in database schema')
     }
 
     // Update blocks if provided and if CardBlock model exists
@@ -115,6 +137,7 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to update card' }, { status: 500 })
   }
 }
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
