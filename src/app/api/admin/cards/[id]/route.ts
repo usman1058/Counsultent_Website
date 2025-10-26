@@ -82,25 +82,81 @@ export async function PUT(
       console.log('Failed to update category relationship:', error)
     }
 
-    // Try to update isActive field using raw SQL
+    // Try to update isActive field using multiple approaches
     if (isActive !== undefined) {
+      let isActiveUpdated = false
+      
+      // Approach 1: Try using Prisma's typed API
       try {
-        const sql = 'UPDATE `Card` SET `isActive` = ? WHERE `id` = ?'
-        await db.$executeRawUnsafe(sql, [isActive, parseInt(id)])
-        console.log('Updated isActive field using raw SQL')
+        await db.card.update({
+          where: { id: parseInt(id) },
+          data: { isActive }
+        })
+        isActiveUpdated = true
+        console.log('Updated isActive field using Prisma API')
       } catch (error) {
-        console.log('Failed to update isActive field:', error)
+        console.log('Prisma API failed for isActive:', error)
+      }
+      
+      // Approach 2: Try using raw SQL if Prisma failed
+      if (!isActiveUpdated) {
+        try {
+          const sql = 'UPDATE `Card` SET `isActive` = ? WHERE `id` = ?'
+          await db.$executeRawUnsafe(sql, [isActive, parseInt(id)])
+          isActiveUpdated = true
+          console.log('Updated isActive field using raw SQL')
+        } catch (error) {
+          console.log('Raw SQL failed for isActive:', error)
+        }
+      }
+      
+      // Approach 3: Try using a different SQL syntax
+      if (!isActiveUpdated) {
+        try {
+          const sql = `UPDATE Card SET isActive = ${isActive ? 1 : 0} WHERE id = ${parseInt(id)}`
+          await db.$executeRawUnsafe(sql)
+          isActiveUpdated = true
+          console.log('Updated isActive field using direct SQL values')
+        } catch (error) {
+          console.log('Direct SQL values failed for isActive:', error)
+        }
+      }
+      
+      if (!isActiveUpdated) {
+        console.log('WARNING: Failed to update isActive field with all approaches')
       }
     }
 
-    // Try to update link field using raw SQL
+    // Try to update link field using multiple approaches
     if (link !== undefined) {
+      let linkUpdated = false
+      
+      // Approach 1: Try using Prisma's typed API
       try {
-        const sql = 'UPDATE `Card` SET `link` = ? WHERE `id` = ?'
-        await db.$executeRawUnsafe(sql, [link, parseInt(id)])
-        console.log('Updated link field using raw SQL')
+        await db.card.update({
+          where: { id: parseInt(id) },
+          data: { link }
+        })
+        linkUpdated = true
+        console.log('Updated link field using Prisma API')
       } catch (error) {
-        console.log('Failed to update link field:', error)
+        console.log('Prisma API failed for link:', error)
+      }
+      
+      // Approach 2: Try using raw SQL if Prisma failed
+      if (!linkUpdated) {
+        try {
+          const sql = 'UPDATE `Card` SET `link` = ? WHERE `id` = ?'
+          await db.$executeRawUnsafe(sql, [link, parseInt(id)])
+          linkUpdated = true
+          console.log('Updated link field using raw SQL')
+        } catch (error) {
+          console.log('Raw SQL failed for link:', error)
+        }
+      }
+      
+      if (!linkUpdated) {
+        console.log('WARNING: Failed to update link field with all approaches')
       }
     }
 
@@ -128,7 +184,7 @@ export async function PUT(
       }
     }
 
-    // Fetch the updated card to return current state
+    // Fetch the updated card to verify the isActive field was updated
     const updatedCard = await db.card.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -140,9 +196,19 @@ export async function PUT(
       }
     })
 
+    // Check if isActive was actually updated
+    const isActiveActuallyUpdated = updatedCard && 'isActive' in updatedCard && updatedCard.isActive === isActive
+
     return NextResponse.json({ 
       message: 'Card updated successfully',
-      card: updatedCard 
+      card: updatedCard,
+      status: {
+        isActiveRequested: isActive,
+        isActiveActuallyUpdated: isActiveActuallyUpdated,
+        // Safely check updatedCard before using the `in` operator to avoid runtime errors when it's null
+        isActiveFieldExists: Boolean(updatedCard && 'isActive' in updatedCard),
+        isActiveCurrentValue: updatedCard && 'isActive' in updatedCard ? updatedCard.isActive : 'N/A'
+      }
     })
   } catch (error) {
     console.error('Failed to update card:', error)
