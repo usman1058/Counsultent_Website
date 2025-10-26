@@ -48,8 +48,7 @@ export async function PUT(
     const updateData: any = {
       title,
       description,
-      imageUrl: imageUrl || null,
-      categoryId: parseInt(categoryId)
+      imageUrl: imageUrl || null
     }
 
     // Add optional fields if they exist in the schema
@@ -66,10 +65,25 @@ export async function PUT(
       console.log('Some fields may not exist in the database schema:', error)
     }
 
+    // Update the card
     const card = await db.card.update({
       where: { id: parseInt(id) },
       data: updateData
     })
+
+    // Update the category relationship separately if needed
+    try {
+      await db.card.update({
+        where: { id: parseInt(id) },
+        data: {
+          category: {
+            connect: { id: parseInt(categoryId) }
+          }
+        }
+      })
+    } catch (error) {
+      console.log('Failed to update category relationship:', error)
+    }
 
     // Update blocks if provided and if CardBlock model exists
     if (blocks !== undefined) {
@@ -80,7 +94,7 @@ export async function PUT(
         })
         
         // Create new blocks
-        if (blocks.length > 0) {
+        if (Array.isArray(blocks) && blocks.length > 0) {
           await db.cardBlock.createMany({
             data: blocks.map((block: any) => ({
               title: block.title,
@@ -91,7 +105,7 @@ export async function PUT(
           })
         }
       } catch (error) {
-        console.log('CardBlock model does not exist, skipping blocks update')
+        console.log('CardBlock model does not exist, skipping blocks update', error)
       }
     }
 
@@ -101,7 +115,6 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to update card' }, { status: 500 })
   }
 }
-
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
