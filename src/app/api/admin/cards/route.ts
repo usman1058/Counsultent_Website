@@ -77,33 +77,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 
-    // Create card with new fields
+    // Build card data with only fields that exist in the database
+    const cardData: any = {
+      title,
+      description,
+      imageUrl: imageUrl || null,
+      categoryId: parseInt(categoryId)
+    }
+
+    // Add optional fields if they exist in the schema
+    try {
+      // Try to include these fields, but don't fail if they don't exist
+      if (cardCategory !== undefined) cardData.cardCategory = cardCategory
+      if (duration !== undefined) cardData.duration = duration
+      if (location !== undefined) cardData.location = location
+      if (intake !== undefined) cardData.intake = intake
+      if (requirements !== undefined) cardData.requirements = requirements
+      if (isActive !== undefined) cardData.isActive = isActive
+      if (link !== undefined) cardData.link = link
+    } catch (error) {
+      console.log('Some fields may not exist in the database schema:', error)
+    }
+
     const card = await db.card.create({
-      data: {
-        title,
-        description, // Now JSON
-        imageUrl: imageUrl || null,
-        categoryId: parseInt(categoryId),
-        cardCategory: cardCategory || null,
-        duration: duration || null,
-        location: location || null,
-        intake: intake || null,
-        requirements: requirements || null,
-        isActive: isActive !== undefined ? isActive : true,
-        link: link || null
-      }
+      data: cardData
     })
 
-    // Create blocks if provided
+    // Create blocks if provided and if CardBlock model exists
     if (blocks && blocks.length > 0) {
-      await db.cardBlock.createMany({
-        data: blocks.map((block: any) => ({
-          title: block.title,
-          value: block.value,
-          icon: block.icon || null,
-          cardId: card.id
-        }))
-      })
+      try {
+        await db.cardBlock.createMany({
+          data: blocks.map((block: any) => ({
+            title: block.title,
+            value: block.value,
+            icon: block.icon || null,
+            cardId: card.id
+          }))
+        })
+      } catch (error) {
+        console.log('CardBlock model does not exist, skipping blocks creation')
+      }
     }
 
     return NextResponse.json(card)

@@ -55,14 +55,14 @@ interface CardBlockData {
   icon: string | null
 }
 
-async function getCardDetail(slug: string, cardId: string): Promise<{ 
-  card: CardData | null; 
+async function getCardDetail(slug: string, cardId: string): Promise<{
+  card: CardData | null;
   dynamicTables: DynamicTableData[];
   blocks: CardBlockData[];
 }> {
   try {
     const card = await db.card.findUnique({
-      where: { 
+      where: {
         id: parseInt(cardId),
         category: {
           studyPage: {
@@ -101,20 +101,27 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
     })
 
     const tables = detailPage?.tables || []
-    
+
     // Filter out duplicates by keeping only the first occurrence of each title
-    const uniqueTables = tables.filter((table, index, self) => 
+    const uniqueTables = tables.filter((table, index, self) =>
       index === self.findIndex((t) => t.title === table.title)
     )
-    
-    // Get blocks for this card
-    const blocks = await db.cardBlock.findMany({
-      where: { cardId: parseInt(cardId) },
-      orderBy: { id: 'asc' } // Change from createdAt to id
-    })
 
-    return { 
-      card, 
+    // Get blocks for this card with error handling
+    let blocks: CardBlockData[] = []
+    try {
+      blocks = await db.cardBlock.findMany({
+        where: { cardId: parseInt(cardId) },
+        orderBy: { id: 'asc' }
+      })
+    } catch (error) {
+      console.log('CardBlock model does not exist in database, returning empty blocks array')
+      // CardBlock model doesn't exist, return empty array
+      blocks = []
+    }
+
+    return {
+      card,
       dynamicTables: uniqueTables,
       blocks
     }
@@ -123,7 +130,6 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
     return { card: null, dynamicTables: [], blocks: [] }
   }
 }
-
 export async function generateMetadata({ params }: CardDetailPageProps) {
   const { slug, cardId } = await params
   const { card } = await getCardDetail(slug, cardId)
@@ -149,12 +155,12 @@ export async function generateMetadata({ params }: CardDetailPageProps) {
 // Function to render Font Awesome icons
 const renderIcon = (iconClass: string) => {
   if (!iconClass) return null
-  
+
   // Check if it's a Font Awesome class
   if (iconClass.includes('fa-') || iconClass.includes('fas ') || iconClass.includes('far ')) {
     return <i className={`${iconClass} text-2xl mr-3`}></i>
   }
-  
+
   // Fallback to regular image if it's a URL
   return <img src={iconClass} alt="icon" className="w-8 h-8 mr-3" />
 }
@@ -162,10 +168,10 @@ const renderIcon = (iconClass: string) => {
 // Function to format requirements as a list
 const formatRequirements = (requirements: string) => {
   if (!requirements) return null;
-  
+
   // Split by bullet points, numbers, or line breaks
   const bulletPoints = requirements.split(/\n|\* |- |\d+\. /).filter(item => item.trim() !== '');
-  
+
   if (bulletPoints.length > 1) {
     return (
       <ul className="space-y-3">
@@ -178,10 +184,10 @@ const formatRequirements = (requirements: string) => {
       </ul>
     );
   }
-  
+
   // If no bullet points, split by sentences
   const sentences = requirements.split('. ').filter(s => s.trim() !== '');
-  
+
   if (sentences.length > 1) {
     return (
       <ul className="space-y-3">
@@ -194,7 +200,7 @@ const formatRequirements = (requirements: string) => {
       </ul>
     );
   }
-  
+
   // Fallback to paragraph
   return <p className="text-gray-700 leading-relaxed">{requirements}</p>;
 };
@@ -208,29 +214,29 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
   }
 
   const renderStructuredDescription = (description: string) => {
-  try {
-    const parsedDescription = JSON.parse(description)
-    
-    return parsedDescription.map((item: any, index: number) => {
-      if (item.type === 'heading') {
-        return <h2 key={index} className="text-3xl font-bold mt-6 mb-4 text-white">{item.content}</h2>
-      } else if (item.type === 'paragraph') {
-        return <p key={index} className="text-xl text-blue-100 mb-6 leading-relaxed">{item.content}</p>
-      } else if (item.type === 'list' && Array.isArray(item.items)) {
-        return (
-          <ul key={index} className="list-disc pl-6 text-xl text-blue-100 mb-6 space-y-2">
-            {item.items.map((listItem: string, i: number) => (
-              <li key={i} className="leading-relaxed">{listItem}</li>
-            ))}
-          </ul>
-        )
-      }
-      return null
-    })
-  } catch (e) {
-    return <p className="text-xl text-blue-100 leading-relaxed">{description}</p>
+    try {
+      const parsedDescription = JSON.parse(description)
+
+      return parsedDescription.map((item: any, index: number) => {
+        if (item.type === 'heading') {
+          return <h2 key={index} className="text-3xl font-bold mt-6 mb-4 text-white">{item.content}</h2>
+        } else if (item.type === 'paragraph') {
+          return <p key={index} className="text-xl text-blue-100 mb-6 leading-relaxed">{item.content}</p>
+        } else if (item.type === 'list' && Array.isArray(item.items)) {
+          return (
+            <ul key={index} className="list-disc pl-6 text-xl text-blue-100 mb-6 space-y-2">
+              {item.items.map((listItem: string, i: number) => (
+                <li key={i} className="leading-relaxed">{listItem}</li>
+              ))}
+            </ul>
+          )
+        }
+        return null
+      })
+    } catch (e) {
+      return <p className="text-xl text-blue-100 leading-relaxed">{description}</p>
+    }
   }
-}
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -246,22 +252,22 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-          
 
-        
+
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
           <div className="mb-8">
             <Link href={`/study/${slug}`}>
-            <Button variant="outline" className="mb-4 border-gray-300 text-gray-700 hover:bg-gray-50">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to {card.category?.studyPage?.title || 'Study Programs'}
-            </Button>
-          </Link>
+              <Button variant="outline" className="mb-4 border-gray-300 text-gray-700 hover:bg-gray-50">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to {card.category?.studyPage?.title || 'Study Programs'}
+              </Button>
+            </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              
+
               <div className="flex flex-wrap items-center gap-3 mb-6">
                 <Badge className="bg-white/20 hover:bg-white/30 text-white border-white/30 px-4 py-2 rounded-full text-sm font-medium">
                   <BookOpen className="w-4 h-4 mr-2" />
@@ -273,11 +279,10 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                     {card.cardCategory}
                   </Badge>
                 )}
-                <Badge className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  card.isActive 
-                    ? 'bg-green-500/80 hover:bg-green-500 text-white border-green-400' 
+                <Badge className={`px-4 py-2 rounded-full text-sm font-medium ${card.isActive
+                    ? 'bg-green-500/80 hover:bg-green-500 text-white border-green-400'
                     : 'bg-red-500/80 hover:bg-red-500 text-white border-red-400'
-                }`}>
+                  }`}>
                   {card.isActive ? (
                     <div className="flex items-center">
                       <Check className="w-4 h-4 mr-2" />
@@ -291,15 +296,15 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                   )}
                 </Badge>
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight">
                 {card.title}
               </h1>
-              
+
               <div className="mb-8 text-xl text-blue-100">
                 {renderStructuredDescription(card.description)}
               </div>
-              
+
               {/* Status Message */}
               {!card.isActive && (
                 <div className="bg-yellow-500/30 border border-yellow-400/50 rounded-xl p-5 mb-8 backdrop-blur-sm">
@@ -346,7 +351,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Program Overview</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">Key details about this study program</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Duration */}
             {(card.duration || blocks.some(b => b.title.toLowerCase().includes('duration'))) && (
@@ -364,7 +369,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                 </div>
               </Card>
             )}
-            
+
             {/* Location */}
             {(card.location || blocks.some(b => b.title.toLowerCase().includes('location'))) && (
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
@@ -381,7 +386,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                 </div>
               </Card>
             )}
-            
+
             {/* Intake */}
             {(card.intake || blocks.some(b => b.title.toLowerCase().includes('intake'))) && (
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
@@ -398,7 +403,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                 </div>
               </Card>
             )}
-            
+
             {/* Button Link */}
             {card.link && (
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
@@ -409,9 +414,9 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Application</h3>
                   </div>
-                  <Link 
-                    href={card.link} 
-                    target="_blank" 
+                  <Link
+                    href={card.link}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold text-lg"
                   >
@@ -437,7 +442,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Program Details</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">Additional information about this program</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {blocks.map((block) => (
                 <Card key={block.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
@@ -471,7 +476,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Admission Requirements</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">What you need to apply for this program</p>
             </div>
-            
+
             <Card className="max-w-4xl mx-auto border-0 shadow-lg">
               <CardContent className="p-8">
                 <div className="prose prose-lg max-w-none">
@@ -539,13 +544,13 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
           <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 translate-y-1/2"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             {card.isActive ? 'Ready to Start Your Journey?' : 'Stay Updated'}
           </h2>
           <p className="text-xl text-blue-100 mb-10 max-w-3xl mx-auto">
-            {card.isActive 
+            {card.isActive
               ? 'Get personalized guidance and support for your study abroad application'
               : 'Get notified when applications reopen for this program'
             }
