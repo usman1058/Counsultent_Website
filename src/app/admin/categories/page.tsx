@@ -518,20 +518,44 @@ export default function CategoriesManagement() {
                                         // Try to parse as JSON
                                         if (typeof card.description === 'string') {
                                           const parsed = JSON.parse(card.description);
+
                                           // If it's an array, get the first item's content
-                                          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].content) {
-                                            return parsed[0].content;
+                                          if (Array.isArray(parsed) && parsed.length > 0) {
+                                            // Check if the first item has a content property and it's a string
+                                            if (parsed[0].content && typeof parsed[0].content === 'string') {
+                                              return parsed[0].content;
+                                            }
+                                            // If content is not a string, convert it to string
+                                            if (parsed[0].content) {
+                                              return String(parsed[0].content);
+                                            }
                                           }
+
                                           // If it's an object with content property
                                           if (parsed && parsed.content) {
-                                            return parsed.content;
+                                            // Ensure content is a string
+                                            if (typeof parsed.content === 'string') {
+                                              return parsed.content;
+                                            }
+                                            return String(parsed.content);
                                           }
                                         }
-                                        // Fallback to original description
-                                        return card.description;
+
+                                        // Fallback to original description if it's a string
+                                        if (typeof card.description === 'string') {
+                                          return card.description;
+                                        }
+
+                                        // If description is not a string, convert it to string
+                                        return String(card.description);
                                       } catch (e) {
-                                        // If parsing fails, return original description
-                                        return card.description;
+                                        // If parsing fails, return original description if it's a string
+                                        if (typeof card.description === 'string') {
+                                          return card.description;
+                                        }
+
+                                        // If description is not a string, convert it to string
+                                        return String(card.description);
                                       }
                                     })()}
                                   </p>
