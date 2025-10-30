@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   keywords: ["Study Abroad", "Visa Consulting", "International Education", "Hadi", "Student Visa", "Scholarships"],
   authors: [{ name: "Study Abroad with Hadi" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo.svg",
   },
   openGraph: {
     title: "Study Abroad with Hadi",
