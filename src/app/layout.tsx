@@ -6,7 +6,6 @@ import { Providers } from "@/components/providers";
 import SmoothScroll from "@/components/ui/smooth-scroll";
 import FloatingActionButton from "@/components/ui/floating-action-button";
 import { ToastNotifications } from "@/components/ui/toast-notifications";
-import RealTimeNotifications from "@/components/real-time-notifications";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -105,8 +104,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" />
         <meta name="author" content="Study Abroad with Hadi" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3745674559190273"
-          crossorigin="anonymous"></script>
+
 
         {/* Structured Data (JSON-LD Schema for SEO) */}
         <script
@@ -137,7 +135,6 @@ export default function RootLayout({
           <SmoothScroll />
           {children}
           <FloatingActionButton />
-          <RealTimeNotifications />
           <Toaster />
           <ToastNotifications />
         </Providers>
