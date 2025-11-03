@@ -102,6 +102,8 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" />
         <meta name="author" content="Study Abroad with Hadi" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3745674559190273"
+     crossorigin="anonymous"></script>
 
         {/* Structured Data (JSON-LD Schema for SEO) */}
         <script
