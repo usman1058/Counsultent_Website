@@ -64,6 +64,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://studyabroadwithhadi.info",
   },
+  other: {
+    "google-adsense-account": "ca-pub-3745674559190273",
+  },
   robots: {
     index: true,
     follow: true,
@@ -87,7 +90,7 @@ export default function RootLayout({
       <head>
         {/* Google AdSense Verification */}
         <meta
-          name="google-adsense-account" 
+          name="google-adsense-account"
           content="ca-pub-3745674559190273"
         />
 
@@ -103,7 +106,7 @@ export default function RootLayout({
         <meta name="author" content="Study Abroad with Hadi" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3745674559190273"
-     crossorigin="anonymous"></script>
+          crossorigin="anonymous"></script>
 
         {/* Structured Data (JSON-LD Schema for SEO) */}
         <script
