@@ -9,91 +9,91 @@ datasource db {
 
 model ContactSubmission {
   id        Int      @id @default(autoincrement())
-  name      String
-  email     String
-  phone     String
-  purpose   String
-  message   String
-  status    String   @default("new")
-  createdAt DateTime @default(now())
+  name      String   @db.VarChar(191)
+  email     String   @db.VarChar(191)
+  phone     String   @db.VarChar(191)
+  purpose   String   @db.VarChar(191)
+  message   String   @db.VarChar(191)
+  status    String   @default("new") @db.VarChar(191)
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt DateTime @updatedAt
 }
 
 model B2BSubmission {
   id        Int      @id @default(autoincrement())
-  name      String
-  company   String
-  email     String
-  phone     String
-  country   String
-  message   String
-  status    String   @default("new")
-  createdAt DateTime @default(now())
+  name      String   @db.VarChar(191)
+  company   String   @db.VarChar(191)
+  email     String   @db.VarChar(191)
+  phone     String   @db.VarChar(191)
+  country   String   @db.VarChar(191)
+  message   String   @db.VarChar(191)
+  status    String   @default("new") @db.VarChar(191)
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt DateTime @updatedAt
 }
 
 model StudyPage {
   id             Int        @id @default(autoincrement())
-  title          String
-  slug           String     @unique
-  description    String
-  bannerUrl      String?
-  seoTitle       String?
-  seoDescription String?
+  title          String     @db.VarChar(191)
+  slug           String     @unique @db.VarChar(191)
+  description    String     @db.VarChar(191)
+  bannerUrl      String?    @db.VarChar(191)
+  seoTitle       String?    @db.VarChar(191)
+  seoDescription String?    @db.VarChar(191)
   isActive       Boolean    @default(true)
-  createdAt      DateTime   @default(now())
+  createdAt      DateTime   @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt      DateTime   @updatedAt
   categories     Category[]
 }
 
 model Category {
   id          Int       @id @default(autoincrement())
-  title       String
-  description String?
+  title       String    @db.VarChar(191)
+  description String?   @db.VarChar(191)
   studyPageId Int
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt   DateTime  @updatedAt
   cards       Card[]
   studyPage   StudyPage @relation(fields: [studyPageId], references: [id], onDelete: Cascade)
-  
+
   @@unique([studyPageId, title])
 }
 
 model Card {
-  id          Int         @id @default(autoincrement())
-  title       String
-  description Json        // Changed to JSON for structured content
-  imageUrl    String?
-  cardCategory String?
-  duration    String?
-  location    String?
-  intake      String?
-  requirements String?
-  categoryId  Int
-  isActive    Boolean     @default(true) // New field for active/inactive status
-  link        String?     // New field for button link
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  details     DetailPage?
-  blocks      CardBlock[] // New relation for dynamic blocks
+  id           Int         @id @default(autoincrement())
+  title        String      @db.VarChar(191)
+  description  Json
+  imageUrl     String?     @db.VarChar(191)
+  cardCategory String?     @db.VarChar(191)
+  duration     String?     @db.VarChar(191)
+  location     String?     @db.VarChar(191)
+  intake       String?     @db.VarChar(191)
+  requirements String?     @db.VarChar(191)
+  categoryId   Int
+  createdAt    DateTime    @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedAt    DateTime    @updatedAt
+  isActive     Boolean     @default(true)
+  link         String?     @db.VarChar(191)
+  Active       Boolean?    @default(true)
+  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  blocks       CardBlock[]
+  details      DetailPage?
 }
 
-// New model for dynamic blocks
 model CardBlock {
-  id      Int    @id @default(autoincrement())
-  title   String // e.g., "Duration"
-  value   String // e.g., "4 years"
-  icon    String? // URL to an icon
-  cardId  Int
-  card    Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  id     Int     @id @default(autoincrement())
+  title  String  @db.VarChar(191)
+  value  String  @db.VarChar(191)
+  icon   String? @db.VarChar(191)
+  cardId Int
+  card   Card    @relation(fields: [cardId], references: [id], onDelete: Cascade)
 }
 
 model DetailPage {
   id        Int            @id @default(autoincrement())
-  content   String
+  content   String         @db.VarChar(191)
   cardId    Int            @unique
-  createdAt DateTime       @default(now())
+  createdAt DateTime       @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt DateTime       @updatedAt
   card      Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
   tables    DynamicTable[]
@@ -101,113 +101,113 @@ model DetailPage {
 
 model DynamicTable {
   id           Int        @id @default(autoincrement())
-  title        String
-  description  String?
+  title        String     @db.VarChar(191)
+  description  String?    @db.VarChar(191)
   detailPageId Int
-  columns      Json       // Array of column definitions
-  rows         Json       // Array of row data
-  iconUrl      String?    // Optional table icon
-  createdAt    DateTime   @default(now())
+  columns      Json
+  rows         Json
+  iconUrl      String?    @db.VarChar(191)
+  createdAt    DateTime   @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt    DateTime   @updatedAt
   detailPage   DetailPage @relation(fields: [detailPageId], references: [id], onDelete: Cascade)
 }
 
 model LuckyDrawEntry {
   id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  phone     String
-  country   String
-  reason    String
+  name      String   @db.VarChar(191)
+  email     String   @unique @db.VarChar(191)
+  phone     String   @db.VarChar(191)
+  country   String   @db.VarChar(191)
+  reason    String   @db.VarChar(191)
   isWinner  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      String   @default("admin")
-  createdAt DateTime @default(now())
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  email     String   @unique @db.VarChar(191)
+  name      String   @db.VarChar(191)
+  password  String   @db.VarChar(191)
+  role      String   @default("admin") @db.VarChar(191)
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt DateTime @updatedAt
 }
 
 model SiteSettings {
   id              Int      @id @default(autoincrement())
-  siteName        String   @default("Study Abroad with Hadi")
-  siteUrl         String   @default("https://studyabroadwithhadi.info")
-  logoUrl         String?
-  faviconUrl      String?
-  contactEmail    String
-  contactPhone    String
-  address         String?
-  aboutContent    String?
-  metaTitle       String?
-  metaDescription String?
-  primaryColor    String   @default("#3b82f6")
-  secondaryColor  String   @default("#6366f1")
-  accentColor     String   @default("#f59e0b")
-  adminName       String   @default("Hadi")
-  adminEmail      String   @default("admin@studyabroadwithhadi.info")
-  adminPhone      String   @default("+1-234-567-8900")
-  adminTitle      String   @default("Expert Visa Consultant")
-  adminBio        String?
+  siteName        String   @default("Study Abroad with Hadi") @db.VarChar(191)
+  siteUrl         String   @default("https://studyabroadwithhadi.info") @db.VarChar(191)
+  logoUrl         String?  @db.VarChar(191)
+  faviconUrl      String?  @db.VarChar(191)
+  contactEmail    String   @db.VarChar(191)
+  contactPhone    String   @db.VarChar(191)
+  address         String?  @db.VarChar(191)
+  aboutContent    String?  @db.VarChar(191)
+  metaTitle       String?  @db.VarChar(191)
+  metaDescription String?  @db.VarChar(191)
+  primaryColor    String   @default("#3b82f6") @db.VarChar(191)
+  secondaryColor  String   @default("#6366f1") @db.VarChar(191)
+  accentColor     String   @default("#f59e0b") @db.VarChar(191)
+  adminName       String   @default("Hadi") @db.VarChar(191)
+  adminEmail      String   @default("admin@studyabroadwithhadi.info") @db.VarChar(191)
+  adminPhone      String   @default("+1-234-567-8900") @db.VarChar(191)
+  adminTitle      String   @default("Expert Visa Consultant") @db.VarChar(191)
+  adminBio        String?  @db.VarChar(191)
   isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
+  createdAt       DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt       DateTime @updatedAt
 }
 
 model Testimonial {
   id         Int      @id @default(autoincrement())
-  name       String
-  country    String
-  university String
-  course     String
-  content    String
+  name       String   @db.VarChar(191)
+  country    String   @db.VarChar(191)
+  university String   @db.VarChar(191)
+  course     String   @db.VarChar(191)
+  content    String   @db.VarChar(191)
   rating     Int      @default(5)
-  imageUrl   String?
+  imageUrl   String?  @db.VarChar(191)
   isFeatured Boolean  @default(false)
   isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  createdAt  DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt  DateTime @updatedAt
 }
 
 model User {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  password  String
-  role      String   @default("USER")
+  email     String   @unique @db.VarChar(191)
+  name      String   @db.VarChar(191)
+  password  String   @db.VarChar(191)
+  role      String   @default("USER") @db.VarChar(191)
   isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt DateTime @updatedAt
 }
 
 model Inquiry {
-  id              Int      @id @default(autoincrement())
-  name            String
-  email           String
-  phone           String
-  country         String
-  preferredStudy  String
-  message         String
-  status          String   @default("PENDING")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String   @db.VarChar(191)
+  email          String   @db.VarChar(191)
+  phone          String   @db.VarChar(191)
+  country        String   @db.VarChar(191)
+  preferredStudy String   @db.VarChar(191)
+  message        String   @db.VarChar(191)
+  status         String   @default("PENDING") @db.VarChar(191)
+  createdAt      DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
+  updatedAt      DateTime @updatedAt
 }
 
 model TeamMember {
   id          Int      @id @default(autoincrement())
-  name        String
-  role        String
-  bio         String?
-  imageUrl    String?
-  email       String?
-  phone       String?
-  linkedinUrl String?
+  name        String   @db.VarChar(191)
+  role        String   @db.VarChar(191)
+  bio         String?  @db.VarChar(191)
+  imageUrl    String?  @db.VarChar(191)
+  email       String?  @db.VarChar(191)
+  phone       String?  @db.VarChar(191)
+  linkedinUrl String?  @db.VarChar(191)
   isActive    Boolean  @default(true)
   order       Int      @default(0)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)"))
   updatedAt   DateTime @updatedAt
 }

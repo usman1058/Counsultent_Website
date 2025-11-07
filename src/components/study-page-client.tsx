@@ -21,36 +21,54 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const cardsPerPage = 6
-  
+
   // Flatten all cards from all categories
-  const allCards = studyPage.categories.flatMap((category: any) => 
+  const allCards = studyPage.categories.flatMap((category: any) =>
     category.cards.map((card: any) => ({ ...card, categoryName: category.title }))
   )
-  
+
   // Filter cards based on active tab, selected category, and search query
   const filteredCards = allCards.filter((card: any) => {
     const isActiveMatch = activeTab === 'active' ? card.isActive : !card.isActive
     const categoryMatch = selectedCategory === 'all' || card.categoryName === selectedCategory
-    
+
     // Search functionality - check if search query matches title, description, location, etc.
-    const searchMatch = searchQuery === '' || 
-      card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (card.description && card.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (card.location && card.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (card.duration && card.duration.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (card.intake && card.intake.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (card.requirements && card.requirements.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (card.cardCategory && card.cardCategory.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (card.categoryName && card.categoryName.toLowerCase().includes(searchQuery.toLowerCase()))
-    
+    const normalizeText = (value: any): string => {
+      if (!value) return ''
+      if (typeof value === 'string') return value
+      if (typeof value === 'object') {
+        // Handle JSON descriptions like [{ type: 'paragraph', content: 'text' }]
+        try {
+          if (Array.isArray(value)) {
+            return value.map((v) => v.content || '').join(' ')
+          } else if (value.content) {
+            return value.content
+          } else {
+            return JSON.stringify(value)
+          }
+        } catch {
+          return ''
+        }
+      }
+      return String(value)
+    }
+
+    const searchMatch =
+      searchQuery === '' ||
+      normalizeText(card.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      normalizeText(card.description).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      normalizeText(card.location).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      normalizeText(card.duration).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      normalizeText(card.intake).toLowerCase().includes(searchQuery.toLowerCase())
+
     return isActiveMatch && categoryMatch && searchMatch
   })
-  
+
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [activeTab, selectedCategory, searchQuery])
-  
+
   // Calculate pagination
   const indexOfLastCard = currentPage * cardsPerPage
   const indexOfFirstCard = indexOfLastCard - cardsPerPage
@@ -63,8 +81,8 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
       <section className="relative h-[600px] bg-gradient-to-br from-primary/20 via-blue-100 to-indigo-100 overflow-hidden">
         {studyPage.bannerUrl ? (
           <div className="absolute inset-0">
-            <img 
-              src={studyPage.bannerUrl} 
+            <img
+              src={studyPage.bannerUrl}
               alt={studyPage.title}
               className="w-full h-full object-cover"
             />
@@ -87,15 +105,15 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
             />
           </div>
         )}
-        
+
         <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div 
+          <motion.div
             className="text-center text-white max-w-5xl mx-auto px-4"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -109,9 +127,9 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
             <p className="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed">
               {studyPage.description}
             </p>
-            
+
             {/* Quick stats */}
-            <motion.div 
+            <motion.div
               className="grid grid-cols-3 gap-8 mt-12 max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -137,7 +155,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
       {/* Cards Section with Active/Inactive Tabs and Categories */}
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -186,11 +204,10 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
             <div className="inline-flex rounded-lg bg-gray-100 p-1">
               <button
                 onClick={() => setActiveTab('active')}
-                className={`px-6 py-3 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'active'
+                className={`px-6 py-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'active'
                     ? 'bg-white text-primary shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 <div className="flex items-center">
                   <ToggleRight className="w-5 h-5 mr-2" />
@@ -202,11 +219,10 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
               </button>
               <button
                 onClick={() => setActiveTab('inactive')}
-                className={`px-6 py-3 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'inactive'
+                className={`px-6 py-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'inactive'
                     ? 'bg-white text-primary shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 <div className="flex items-center">
                   <ToggleLeft className="w-5 h-5 mr-2" />
@@ -224,11 +240,10 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
             <div className="inline-flex rounded-lg bg-gray-100 p-1 flex-wrap">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors m-1 ${
-                  selectedCategory === 'all'
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors m-1 ${selectedCategory === 'all'
                     ? 'bg-white text-primary shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
               >
                 All Categories
               </button>
@@ -236,11 +251,10 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.title)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors m-1 ${
-                    selectedCategory === category.title
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors m-1 ${selectedCategory === category.title
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                    }`}
                 >
                   {category.title}
                 </button>
@@ -261,15 +275,14 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                   whileHover={{ y: -5 }}
                   className="group"
                 >
-                  <Card className={`h-[450px] flex flex-col border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-white group-hover:bg-gradient-to-br group-hover:from-primary/5 group-hover:to-white overflow-hidden ${
-                    !card.isActive ? 'opacity-75' : ''
-                  }`}>
+                  <Card className={`h-[450px] flex flex-col border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-white group-hover:bg-gradient-to-br group-hover:from-primary/5 group-hover:to-white overflow-hidden ${!card.isActive ? 'opacity-75' : ''
+                    }`}>
                     {/* Card Image */}
                     <div className="relative h-60 flex-shrink-0 overflow-hidden">
                       {card.imageUrl ? (
                         <div className="relative w-full h-full">
-                          <img 
-                            src={card.imageUrl} 
+                          <img
+                            src={card.imageUrl}
                             alt={card.title}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
@@ -279,7 +292,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/10 to-blue-500/20 flex items-center justify-center relative overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-blue-500/5"></div>
-                          <motion.div 
+                          <motion.div
                             className="text-4xl relative z-10"
                             animate={{ rotate: [0, 5, -5, 0] }}
                             transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
@@ -288,7 +301,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                           </motion.div>
                         </div>
                       )}
-                      
+
                       {/* Status badge overlay */}
                       <div className="absolute top-3 left-3 flex gap-2">
                         <Badge className={`${card.isActive ? 'bg-green-500' : 'bg-red-500'} text-white text-xs shadow-md`}>
@@ -299,7 +312,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                         </Badge>
                       </div>
                     </div>
-                    
+
                     {/* Card Content */}
                     <CardContent className="p-5 flex flex-col flex-1">
                       <div className="flex justify-between items-start mb-4">
@@ -312,7 +325,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                           </Badge>
                         )}
                       </div>
-                      
+
                       {/* Key Details as Badges */}
                       <div className="flex flex-wrap gap-2 mb-6">
                         {card.duration && (
@@ -334,7 +347,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                           </div>
                         )}
                       </div>
-                      
+
                       {/* View Details Button */}
                       <div className="mt-auto">
                         <Link href={`/study/${studyPage.slug}/${card.id}`}>
@@ -354,15 +367,15 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-2">No programs found</h3>
               <p className="text-gray-600 max-w-md mx-auto">
-                {searchQuery 
+                {searchQuery
                   ? `No programs match your search for "${searchQuery}". Try different keywords or clear the search.`
                   : `No ${activeTab} programs found in ${selectedCategory === 'all' ? 'any category' : selectedCategory}.`
                 }
               </p>
               {searchQuery && (
-                <Button 
+                <Button
                   onClick={() => setSearchQuery('')}
-                  variant="outline" 
+                  variant="outline"
                   className="mt-4"
                 >
                   Clear Search
@@ -374,8 +387,8 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center space-x-2">
-              <Button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              <Button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 variant="outline"
                 className="flex items-center"
@@ -383,7 +396,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
               </Button>
-              
+
               <div className="flex space-x-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <Button
@@ -397,9 +410,9 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
                   </Button>
                 ))}
               </div>
-              
-              <Button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+
+              <Button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 variant="outline"
                 className="flex items-center"
@@ -425,7 +438,7 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
               Ready to Study {studyPage.title.split(' in ')[1]}?
             </h2>
             <p className="text-xl mb-10 opacity-90 max-w-3xl mx-auto">
-              Get expert guidance personalized for your study abroad journey. 
+              Get expert guidance personalized for your study abroad journey.
               Let us help you achieve your dreams of studying in {studyPage.title.split(' in ')[1]}.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">

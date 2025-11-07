@@ -213,30 +213,105 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     notFound()
   }
 
-  const renderStructuredDescription = (description: string) => {
+  const renderStructuredDescription = (description: any): React.ReactNode => {
     try {
-      const parsedDescription = JSON.parse(description)
+      const parsed =
+        typeof description === "string" ? JSON.parse(description) : description;
 
-      return parsedDescription.map((item: any, index: number) => {
-        if (item.type === 'heading') {
-          return <h2 key={index} className="text-3xl font-bold mt-6 mb-4 text-white">{item.content}</h2>
-        } else if (item.type === 'paragraph') {
-          return <p key={index} className="text-xl text-blue-100 mb-6 leading-relaxed">{item.content}</p>
-        } else if (item.type === 'list' && Array.isArray(item.items)) {
+      // recursive function to extract text from nested structures
+      const renderItem = (item: any, index?: number): React.ReactNode => {
+        if (!item) return null;
+
+        // If content is array, render it recursively
+        if (Array.isArray(item.content)) {
           return (
-            <ul key={index} className="list-disc pl-6 text-xl text-blue-100 mb-6 space-y-2">
-              {item.items.map((listItem: string, i: number) => (
-                <li key={i} className="leading-relaxed">{listItem}</li>
+            <div key={index}>
+              {item.content.map((sub: any, i: number) => renderItem(sub, i))}
+            </div>
+          );
+        }
+
+        // Paragraph
+        if (item.type === "paragraph" && typeof item.content === "string") {
+          // Bolden label-style text before colons
+          const formatted = item.content.replace(
+            /([A-Za-z ]+):/g,
+            "<strong>$1:</strong>"
+          );
+          return (
+            <p
+              key={index}
+              className="text-lg text-blue-100 mb-3 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: formatted }}
+            />
+          );
+        }
+
+        // Heading
+        if (item.type === "heading") {
+          return (
+            <h2
+              key={index}
+              className="text-3xl font-bold mt-6 mb-4 text-white"
+            >
+              {typeof item.content === "string"
+                ? item.content
+                : JSON.stringify(item.content)}
+            </h2>
+          );
+        }
+
+        // List
+        if (item.type === "list" && Array.isArray(item.items)) {
+          return (
+            <ul
+              key={index}
+              className="list-disc pl-6 text-blue-100 mb-4 space-y-2"
+            >
+              {item.items.map((li: any, i: number) => (
+                <li key={i}>
+                  {typeof li === "string" ? li : JSON.stringify(li)}
+                </li>
               ))}
             </ul>
-          )
+          );
         }
-        return null
-      })
+
+        // Fallback: text or object
+        if (typeof item === "string") {
+          return (
+            <p
+              key={index}
+              className="text-lg text-blue-100 mb-3 leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: item.replace(/([A-Za-z ]+):/g, "<strong>$1:</strong>"),
+              }}
+            />
+          );
+        }
+
+        return null;
+      };
+
+      // Handle array or single object
+      if (Array.isArray(parsed)) {
+        return parsed.map((item, index) => renderItem(item, index));
+      } else {
+        return renderItem(parsed);
+      }
     } catch (e) {
-      return <p className="text-xl text-blue-100 leading-relaxed">{description}</p>
+      console.error("Failed to render structured description:", e);
+      return (
+        <p className="text-lg text-blue-100 leading-relaxed">
+          {String(description)}
+        </p>
+      );
     }
-  }
+  };
+
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -280,8 +355,8 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                   </Badge>
                 )}
                 <Badge className={`px-4 py-2 rounded-full text-sm font-medium ${card.isActive
-                    ? 'bg-green-500/80 hover:bg-green-500 text-white border-green-400'
-                    : 'bg-red-500/80 hover:bg-red-500 text-white border-red-400'
+                  ? 'bg-green-500/80 hover:bg-green-500 text-white border-green-400'
+                  : 'bg-red-500/80 hover:bg-red-500 text-white border-red-400'
                   }`}>
                   {card.isActive ? (
                     <div className="flex items-center">
@@ -304,6 +379,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
               <div className="mb-8 text-xl text-blue-100">
                 {renderStructuredDescription(card.description)}
               </div>
+
 
               {/* Status Message */}
               {!card.isActive && (
