@@ -75,6 +75,43 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
   const currentCards = filteredCards.slice(indexOfFirstCard, indexOfLastCard)
   const totalPages = Math.ceil(filteredCards.length / cardsPerPage)
 
+  // Generate pagination range with ellipsis
+  const getPaginationRange = () => {
+    // If total pages is 7 or less, show all pages
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+
+    // Always show first page
+    const range = [1]
+    
+    // Calculate start and end of page range around current page
+    const start = Math.max(2, currentPage - 1)
+    const end = Math.min(totalPages - 1, currentPage + 1)
+    
+    // Add ellipsis if needed before middle pages
+    if (start > 2) {
+      range.push('...')
+    }
+    
+    // Add middle pages
+    for (let i = start; i <= end; i++) {
+      range.push(i)
+    }
+    
+    // Add ellipsis if needed before last page
+    if (end < totalPages - 1) {
+      range.push('...')
+    }
+    
+    // Always show last page
+    if (totalPages > 1) {
+      range.push(totalPages)
+    }
+    
+    return range
+  }
+
   return (
     <div>
       {/* Enhanced Banner Section */}
@@ -398,16 +435,20 @@ export default function StudyPageClient({ studyPage, countryData }: StudyPageCli
               </Button>
 
               <div className="flex space-x-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <Button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    className="w-10 h-10"
-                  >
-                    {page}
-                  </Button>
+                {getPaginationRange().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-500">...</span>
+                  ) : (
+                    <Button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      className="w-10 h-10"
+                    >
+                      {page}
+                    </Button>
+                  )
                 ))}
               </div>
 

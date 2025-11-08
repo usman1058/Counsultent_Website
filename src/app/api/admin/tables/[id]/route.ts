@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/db'
 
+
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -16,7 +18,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { title, description, columns, rows } = body
+    const { title, description, detailPageId, columns, rows, iconUrl } = body
 
     if (!title || !columns || !rows) {
       return NextResponse.json(
@@ -25,17 +27,70 @@ export async function PUT(
       )
     }
 
-    const table = await db.dynamicTable.update({
+    // First, get the current table to ensure it exists
+    const currentTable = await db.dynamicTable.findUnique({
+      where: { id: parseInt(id) }
+    })
+
+    if (!currentTable) {
+      return NextResponse.json(
+        { error: 'Table not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if the detailPageId is changing
+    const isChangingDetailPage = currentTable.detailPageId !== detailPageId
+
+    // If the detailPageId is changing, we need to move the table to a different detail page
+    if (isChangingDetailPage) {
+      // Verify that the new detail page exists
+      const newDetailPage = await db.detailPage.findUnique({
+        where: { id: parseInt(detailPageId) }
+      })
+
+      if (!newDetailPage) {
+        return NextResponse.json(
+          { error: 'New detail page not found' },
+          { status: 404 }
+        )
+      }
+
+      console.log(`Moving table from detailPage ${currentTable.detailPageId} to detailPage ${detailPageId}`)
+    }
+
+    // Update the table
+    const updatedTable = await db.dynamicTable.update({
       where: { id: parseInt(id) },
       data: {
         title,
         description: description || null,
+        detailPageId: parseInt(detailPageId), // This will move the table to a different detail page
         columns,
-        rows
+        rows,
+        iconUrl: iconUrl || null
+      },
+      include: {
+        detailPage: {
+          include: {
+            card: {
+              include: {
+                category: {
+                  include: {
+                    studyPage: true
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     })
 
-    return NextResponse.json(table)
+    // Log the update for debugging
+    console.log('Table updated successfully:', updatedTable)
+
+    return NextResponse.json(updatedTable)
   } catch (error) {
     console.error('Failed to update table:', error)
     return NextResponse.json(
@@ -44,6 +99,7 @@ export async function PUT(
     )
   }
 }
+
 
 export async function DELETE(
   request: NextRequest,

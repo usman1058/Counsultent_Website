@@ -1,5 +1,5 @@
-// study/[slug]/[cardId]/page.tsx
 import { notFound } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +9,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/navbar'
 import DynamicTableRenderer from '@/components/dynamic-table-renderer'
+import RefreshButton from '@/components/refresh-button'
+
+// Force revalidation on every request
+export const revalidate = 0
 
 interface CardDetailPageProps {
   params: Promise<{ slug: string; cardId: string }>
@@ -60,7 +64,12 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
   dynamicTables: DynamicTableData[];
   blocks: CardBlockData[];
 }> {
+  // Opt out of static rendering
+  noStore();
+
   try {
+    console.log(`Fetching card detail for slug: ${slug}, cardId: ${cardId}`);
+
     const card = await db.card.findUnique({
       where: {
         id: parseInt(cardId),
@@ -87,6 +96,7 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
     })
 
     if (!card) {
+      console.log('Card not found');
       return { card: null, dynamicTables: [], blocks: [] }
     }
 
@@ -101,11 +111,60 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
     })
 
     const tables = detailPage?.tables || []
+    console.log(`Found ${tables.length} tables for card ${cardId}`);
+    console.log('Tables from API:', tables);
 
-    // Filter out duplicates by keeping only the first occurrence of each title
-    const uniqueTables = tables.filter((table, index, self) =>
-      index === self.findIndex((t) => t.title === table.title)
-    )
+    // Transform the table data to ensure consistent structure
+    const transformedTables = tables.map(table => {
+      console.log('Processing table:', table.title);
+      console.log('Table columns:', table.columns);
+      console.log('Table rows before transform:', table.rows);
+
+      const transformedRows = table.rows.map((row, rowIndex) => {
+        console.log(`Processing row ${rowIndex}:`, row);
+
+        // If the row already has a 'data' array, use it as is
+        if (row.data && Array.isArray(row.data)) {
+          console.log(`Row ${rowIndex} already has data array:`, row.data);
+          return row;
+        }
+
+        // If the row has key-value pairs in 'data', convert to array
+        if (row.data && typeof row.data === 'object' && !Array.isArray(row.data)) {
+          console.log(`Row ${rowIndex} has data object:`, row.data);
+
+          // Convert the key-value object to an array based on column order
+          const dataArray = table.columns.map(column => {
+            const value = row.data[column.id];
+            console.log(`Column ${column.id} (${column.name}) has value:`, value);
+            return value;
+          });
+
+          console.log(`Row ${rowIndex} transformed to data array:`, dataArray);
+
+          return {
+            ...row,
+            data: dataArray
+          };
+        }
+
+        // If the row has neither, create an empty 'data' array
+        console.log(`Row ${rowIndex} has no data, creating empty array`);
+        return {
+          ...row,
+          data: []
+        };
+      });
+
+      console.log('Table rows after transform:', transformedRows);
+
+      return {
+        ...table,
+        rows: transformedRows
+      };
+    });
+
+    console.log('Transformed tables:', transformedTables);
 
     // Get blocks for this card with error handling
     let blocks: CardBlockData[] = []
@@ -122,7 +181,7 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
 
     return {
       card,
-      dynamicTables: uniqueTables,
+      dynamicTables: transformedTables, // Use transformed tables here
       blocks
     }
   } catch (error) {
@@ -130,6 +189,7 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
     return { card: null, dynamicTables: [], blocks: [] }
   }
 }
+
 export async function generateMetadata({ params }: CardDetailPageProps) {
   const { slug, cardId } = await params
   const { card } = await getCardDetail(slug, cardId)
@@ -309,15 +369,19 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     }
   };
 
+  // Add logging before the DynamicTables section
+  console.log('About to render dynamic tables:', dynamicTables);
 
-
-
+  if (dynamicTables && dynamicTables.length > 0) {
+    console.log('First table for rendering:', dynamicTables[0]);
+    console.log('First table rows:', dynamicTables[0].rows);
+    console.log('First row of first table:', dynamicTables[0].rows[0]);
+    console.log('First row data:', dynamicTables[0].rows[0].data);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
-
-
 
       {/* Program Header with Status Badge */}
       <div className={`bg-gradient-to-r ${card.isActive ? 'from-blue-600 to-indigo-700' : 'from-gray-700 to-gray-900'} text-white relative overflow-hidden`}>
@@ -327,22 +391,20 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-
-
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-          <div className="mb-8">
+          <div className="mb-8 flex justify-between items-center">
             <Link href={`/study/${slug}`}>
-              <Button variant="outline" className="mb-4 border-gray-300 text-gray-700 hover:bg-gray-50">
+              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to {card.category?.studyPage?.title || 'Study Programs'}
               </Button>
             </Link>
+
+            <RefreshButton path={`/study/${slug}/${cardId}`} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-
               <div className="flex flex-wrap items-center gap-3 mb-6">
                 <Badge className="bg-white/20 hover:bg-white/30 text-white border-white/30 px-4 py-2 rounded-full text-sm font-medium">
                   <BookOpen className="w-4 h-4 mr-2" />
@@ -379,7 +441,6 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
               <div className="mb-8 text-xl text-blue-100">
                 {renderStructuredDescription(card.description)}
               </div>
-
 
               {/* Status Message */}
               {!card.isActive && (

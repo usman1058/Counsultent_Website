@@ -146,15 +146,24 @@ export default function TableBuilder({
         updateRow(rowId, { [columnId]: value })
     }
 
-
     const handleSave = async () => {
+        console.log('Saving table:', { 
+            title, 
+            description, 
+            detailPageId, 
+            columns, 
+            rows, 
+            iconUrl,
+            initialData: initialData?.id
+        });
+        
         if (!title.trim()) {
             toast.error('Table title is required')
             return
         }
 
         if (!detailPageId) {
-            toast.error('Please select a detail page')
+            toast.error('Please select a card')
             return
         }
 
@@ -166,24 +175,35 @@ export default function TableBuilder({
         setIsSaving(true)
 
         try {
-            // For creating a new table, use the detail-pages POST endpoint
-            if (!initialData) {
-                await fetch('/api/admin/detail-pages', {
+            // For creating a new table, use the tables POST endpoint
+            if (!initialData?.id) {
+                const response = await fetch('/api/admin/tables', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        cardId: detailPageId,
                         title,
                         description,
+                        detailPageId: parseInt(detailPageId),
                         columns,
-                        rows
+                        rows,
+                        iconUrl
                     })
                 })
+
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    console.error('Create failed:', errorData);
+                    throw new Error(errorData.error || 'Failed to create table')
+                }
+
+                const newTable = await response.json()
+                console.log('Created table:', newTable);
+                onSave(newTable)
             } else {
                 // For updating an existing table, use the tables PUT endpoint
-                await fetch(`/api/admin/tables/${initialData.id}`, {
+                const response = await fetch(`/api/admin/tables/${initialData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -191,23 +211,26 @@ export default function TableBuilder({
                     body: JSON.stringify({
                         title,
                         description,
+                        detailPageId: parseInt(detailPageId), // This is the key change
                         columns,
                         rows,
                         iconUrl
                     })
                 })
-            }
 
-            onSave({
-                title,
-                description,
-                detailPageId: parseInt(detailPageId),
-                columns,
-                rows,
-                iconUrl
-            })
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    console.error('Update failed:', errorData);
+                    throw new Error(errorData.error || 'Failed to update table')
+                }
+
+                const updatedTable = await response.json()
+                console.log('Updated table:', updatedTable);
+                onSave(updatedTable)
+            }
         } catch (error) {
-            // Error is handled in the parent component
+            console.error('Save error:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to save table')
         } finally {
             setIsSaving(false)
         }

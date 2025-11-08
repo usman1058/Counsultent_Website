@@ -120,6 +120,8 @@ export function useDynamicTable(options: UseDynamicTableOptions = {}) {
     setError(null)
 
     try {
+      console.log('Updating table:', id, tableData);
+      
       const response = await fetch(`/api/admin/tables/${id}`, {
         method: 'PUT',
         headers: {
@@ -130,13 +132,36 @@ export function useDynamicTable(options: UseDynamicTableOptions = {}) {
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('Update failed:', errorData);
         throw new Error(errorData.error || 'Failed to update table')
       }
 
       const updatedTable = await response.json()
-      setTables(prev => prev.map(table => 
-        table.id === id ? updatedTable : table
-      ))
+      console.log('Updated table response:', updatedTable);
+      
+      // Ensure the response includes the detailPage relationship
+      if (!updatedTable.detailPage) {
+        console.log('Response missing detailPage, fetching full table...');
+        // If the response doesn't include the detailPage, fetch the full table data
+        const fullTableResponse = await fetch(`/api/admin/tables/${id}`)
+        if (fullTableResponse.ok) {
+          const fullTable = await fullTableResponse.json()
+          console.log('Full table data:', fullTable);
+          setTables(prev => prev.map(table => 
+            table.id === id ? fullTable : table
+          ))
+        } else {
+          // Fallback: update with what we have
+          setTables(prev => prev.map(table => 
+            table.id === id ? { ...table, ...updatedTable } : table
+          ))
+        }
+      } else {
+        setTables(prev => prev.map(table => 
+          table.id === id ? updatedTable : table
+        ))
+      }
+      
       toast.success('Table updated successfully')
       return updatedTable
     } catch (err) {
