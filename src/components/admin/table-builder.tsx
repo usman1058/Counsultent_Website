@@ -61,6 +61,7 @@ export default function TableBuilder({
     const [newColumnName, setNewColumnName] = useState('')
     const [newColumnType, setNewColumnType] = useState<Column['type']>('text')
     const [showAddColumn, setShowAddColumn] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
 
     const initialColumns = initialData?.columns || []
     const initialRows = initialData?.rows || []
@@ -147,23 +148,30 @@ export default function TableBuilder({
     }
 
     const handleSave = async () => {
-        console.log('Saving table:', { 
-            title, 
-            description, 
-            detailPageId, 
-            columns, 
-            rows, 
+        console.log('Saving table:', {
+            title,
+            description,
+            detailPageId,
+            columns,
+            rows,
             iconUrl,
             initialData: initialData?.id
         });
-        
+
         if (!title.trim()) {
             toast.error('Table title is required')
             return
         }
 
+        // Validate detailPageId
         if (!detailPageId) {
             toast.error('Please select a card')
+            return
+        }
+
+        const parsedDetailPageId = parseInt(detailPageId)
+        if (isNaN(parsedDetailPageId)) {
+            toast.error('Invalid card selection')
             return
         }
 
@@ -173,9 +181,10 @@ export default function TableBuilder({
         }
 
         setIsSaving(true)
+        setIsLoading(true)
 
         try {
-            // For creating a new table, use the tables POST endpoint
+            // For creating a new table
             if (!initialData?.id) {
                 const response = await fetch('/api/admin/tables', {
                     method: 'POST',
@@ -185,7 +194,7 @@ export default function TableBuilder({
                     body: JSON.stringify({
                         title,
                         description,
-                        detailPageId: parseInt(detailPageId),
+                        detailPageId: parsedDetailPageId,
                         columns,
                         rows,
                         iconUrl
@@ -202,7 +211,16 @@ export default function TableBuilder({
                 console.log('Created table:', newTable);
                 onSave(newTable)
             } else {
-                // For updating an existing table, use the tables PUT endpoint
+                // For updating an existing table
+                console.log('Sending update request with body:', {
+                    title,
+                    description,
+                    detailPageId: parsedDetailPageId,
+                    columns,
+                    rows,
+                    iconUrl
+                });
+
                 const response = await fetch(`/api/admin/tables/${initialData.id}`, {
                     method: 'PUT',
                     headers: {
@@ -211,16 +229,26 @@ export default function TableBuilder({
                     body: JSON.stringify({
                         title,
                         description,
-                        detailPageId: parseInt(detailPageId), // This is the key change
+                        detailPageId: parsedDetailPageId,
                         columns,
                         rows,
                         iconUrl
                     })
                 })
 
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
-                    const errorData = await response.json()
+                    const errorText = await response.text();
+                    console.error('Response text:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { raw: errorText };
+                    }
                     console.error('Update failed:', errorData);
+
                     throw new Error(errorData.error || 'Failed to update table')
                 }
 
@@ -233,6 +261,7 @@ export default function TableBuilder({
             toast.error(error instanceof Error ? error.message : 'Failed to save table')
         } finally {
             setIsSaving(false)
+            setIsLoading(false)
         }
     }
 
@@ -300,6 +329,16 @@ export default function TableBuilder({
                 )
         }
     }
+
+    // Reset form when initialData changes
+    useEffect(() => {
+        if (initialData) {
+            setTitle(initialData.title || '')
+            setDescription(initialData.description || '')
+            setDetailPageId(initialData.detailPageId?.toString() || '')
+            setIconUrl(initialData.iconUrl || '')
+        }
+    }, [initialData])
 
     return (
         <div className="space-y-6">
@@ -569,7 +608,10 @@ export default function TableBuilder({
                     <Button variant="outline" disabled={columns.length === 0 || rows.length === 0}>
                         Preview
                     </Button>
-                    <Button onClick={handleSave} disabled={isSaving}>
+                    <Button 
+                        onClick={handleSave} 
+                        disabled={isSaving || isLoading}
+                    >
                         {isSaving ? 'Saving...' : 'Save Table'}
                     </Button>
                 </div>

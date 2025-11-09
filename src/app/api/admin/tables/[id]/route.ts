@@ -3,8 +3,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/db'
 
-
-
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,7 +25,7 @@ export async function PUT(
       )
     }
 
-    // First, get the current table to ensure it exists
+    // Verify the table exists
     const currentTable = await db.dynamicTable.findUnique({
       where: { id: parseInt(id) }
     })
@@ -39,33 +37,61 @@ export async function PUT(
       )
     }
 
-    // Check if the detailPageId is changing
-    const isChangingDetailPage = currentTable.detailPageId !== detailPageId
+    // Check if we're changing to a different card
+    const isChangingCard = currentTable.detailPageId !== parseInt(detailPageId)
+    
+    let finalDetailPageId = parseInt(detailPageId)
 
-    // If the detailPageId is changing, we need to move the table to a different detail page
-    if (isChangingDetailPage) {
-      // Verify that the new detail page exists
-      const newDetailPage = await db.detailPage.findUnique({
-        where: { id: parseInt(detailPageId) }
+    if (isChangingCard) {
+      // Try to find a detail page associated with this card
+      let detailPage = await db.detailPage.findFirst({
+        where: { cardId: finalDetailPageId }
       })
 
-      if (!newDetailPage) {
-        return NextResponse.json(
-          { error: 'New detail page not found' },
-          { status: 404 }
-        )
+      // If no detail page exists for this card, create one
+      if (!detailPage) {
+        try {
+          // Get the card to create a detail page for it
+          const card = await db.card.findUnique({
+            where: { id: finalDetailPageId }
+          })
+
+          if (!card) {
+            return NextResponse.json(
+              { error: 'Card not found' },
+              { status: 404 }
+            )
+          }
+
+          // Create a new detail page for the card
+          detailPage = await db.detailPage.create({
+            data: {
+              cardId: finalDetailPageId,
+              content: `Detail page for ${card.title}`
+            }
+          })
+
+          console.log(`Created new detail page ${detailPage.id} for card ${card.id}`)
+        } catch (error) {
+          console.error('Failed to create detail page:', error)
+          return NextResponse.json(
+            { error: 'Failed to create detail page for the selected card' },
+            { status: 500 }
+          )
+        }
       }
 
-      console.log(`Moving table from detailPage ${currentTable.detailPageId} to detailPage ${detailPageId}`)
+      // Use the detail page's ID (not the card ID)
+      finalDetailPageId = detailPage.id
     }
 
-    // Update the table
+    // Update the table with the final detail page ID
     const updatedTable = await db.dynamicTable.update({
       where: { id: parseInt(id) },
       data: {
         title,
         description: description || null,
-        detailPageId: parseInt(detailPageId), // This will move the table to a different detail page
+        detailPageId: finalDetailPageId,
         columns,
         rows,
         iconUrl: iconUrl || null
@@ -87,19 +113,15 @@ export async function PUT(
       }
     })
 
-    // Log the update for debugging
-    console.log('Table updated successfully:', updatedTable)
-
     return NextResponse.json(updatedTable)
   } catch (error) {
     console.error('Failed to update table:', error)
     return NextResponse.json(
-      { error: 'Failed to update table' },
+      { error: error instanceof Error ? error.message : 'Failed to update table' },
       { status: 500 }
     )
   }
 }
-
 
 export async function DELETE(
   request: NextRequest,

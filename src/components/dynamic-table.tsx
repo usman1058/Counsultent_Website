@@ -20,7 +20,8 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Info
 } from 'lucide-react'
 
 interface DynamicTableProps {
@@ -134,7 +135,9 @@ export default function DynamicTable({ columns, rows }: DynamicTableProps) {
   if (rows.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        No data available
+        <Info className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+        <p className="text-lg font-medium">No data available</p>
+        <p className="text-sm mt-1">There are no records to display</p>
       </div>
     )
   }

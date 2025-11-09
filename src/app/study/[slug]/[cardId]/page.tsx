@@ -123,19 +123,32 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
       const transformedRows = table.rows.map((row, rowIndex) => {
         console.log(`Processing row ${rowIndex}:`, row);
 
+        let rowData = row.data;
+
+        // If row.data is a string, try to parse it as JSON
+        if (typeof rowData === 'string') {
+          try {
+            rowData = JSON.parse(rowData);
+            console.log(`Parsed row data for row ${rowIndex}:`, rowData);
+          } catch (e) {
+            console.error(`Failed to parse row data for row ${rowIndex}:`, e);
+            rowData = {};
+          }
+        }
+
         // If the row already has a 'data' array, use it as is
-        if (row.data && Array.isArray(row.data)) {
-          console.log(`Row ${rowIndex} already has data array:`, row.data);
-          return row;
+        if (rowData && Array.isArray(rowData)) {
+          console.log(`Row ${rowIndex} already has data array:`, rowData);
+          return { ...row, data: rowData };
         }
 
         // If the row has key-value pairs in 'data', convert to array
-        if (row.data && typeof row.data === 'object' && !Array.isArray(row.data)) {
-          console.log(`Row ${rowIndex} has data object:`, row.data);
+        if (rowData && typeof rowData === 'object' && !Array.isArray(rowData)) {
+          console.log(`Row ${rowIndex} has data object:`, rowData);
 
           // Convert the key-value object to an array based on column order
           const dataArray = table.columns.map(column => {
-            const value = row.data[column.id];
+            const value = rowData[column.id];
             console.log(`Column ${column.id} (${column.name}) has value:`, value);
             return value;
           });
@@ -181,7 +194,7 @@ async function getCardDetail(slug: string, cardId: string): Promise<{
 
     return {
       card,
-      dynamicTables: transformedTables, // Use transformed tables here
+      dynamicTables: transformedTables,
       blocks
     }
   } catch (error) {
@@ -375,8 +388,10 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
   if (dynamicTables && dynamicTables.length > 0) {
     console.log('First table for rendering:', dynamicTables[0]);
     console.log('First table rows:', dynamicTables[0].rows);
-    console.log('First row of first table:', dynamicTables[0].rows[0]);
-    console.log('First row data:', dynamicTables[0].rows[0].data);
+    if (dynamicTables[0].rows.length > 0) {
+      console.log('First row of first table:', dynamicTables[0].rows[0]);
+      console.log('First row data:', dynamicTables[0].rows[0].data);
+    }
   }
 
   return (
@@ -660,7 +675,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
                     <h3 className="text-2xl font-bold text-gray-900">{table.title}</h3>
                   </div>
                   <DynamicTableRenderer
-                    key={`renderer-${table.id}`}
+                    key={`renderer-${table.id}-${index}`}
                     title={table.title}
                     description={table.description}
                     columns={table.columns}

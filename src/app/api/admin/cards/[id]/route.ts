@@ -205,7 +205,6 @@ export async function PUT(
       status: {
         isActiveRequested: isActive,
         isActiveActuallyUpdated: isActiveActuallyUpdated,
-        // Safely check updatedCard before using the `in` operator to avoid runtime errors when it's null
         isActiveFieldExists: Boolean(updatedCard && 'isActive' in updatedCard),
         isActiveCurrentValue: updatedCard && 'isActive' in updatedCard ? updatedCard.isActive : 'N/A'
       }
@@ -228,6 +227,58 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if the card exists
+    const card = await db.card.findUnique({
+      where: { id: parseInt(id) }
+    })
+
+    if (!card) {
+      return NextResponse.json({ error: 'Card not found' }, { status: 404 })
+    }
+
+    // Find and delete any detail pages associated with this card
+    try {
+      const detailPages = await db.detailPage.findMany({
+        where: { cardId: parseInt(id) }
+      })
+
+      if (detailPages.length > 0) {
+        console.log(`Found ${detailPages.length} detail pages for card ${id}`)
+        
+        // Delete any tables associated with these detail pages
+        for (const detailPage of detailPages) {
+          try {
+            await db.dynamicTable.deleteMany({
+              where: { detailPageId: detailPage.id }
+            })
+            console.log(`Deleted tables for detail page ${detailPage.id}`)
+          } catch (error) {
+            console.error(`Failed to delete tables for detail page ${detailPage.id}:`, error)
+          }
+        }
+
+        // Delete the detail pages
+        await db.detailPage.deleteMany({
+          where: { cardId: parseInt(id) }
+        })
+        console.log(`Deleted detail pages for card ${id}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete associated detail pages:', error)
+      // Continue with card deletion even if detail page deletion fails
+    }
+
+    // Delete any blocks associated with this card
+    try {
+      await db.cardBlock.deleteMany({
+        where: { cardId: parseInt(id) }
+      })
+      console.log(`Deleted blocks for card ${id}`)
+    } catch (error) {
+      console.log('CardBlock model does not exist, skipping blocks deletion', error)
+    }
+
+    // Delete the card
     await db.card.delete({
       where: { id: parseInt(id) }
     })

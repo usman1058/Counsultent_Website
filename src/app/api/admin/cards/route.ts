@@ -99,9 +99,50 @@ export async function POST(request: NextRequest) {
       console.log('Some fields may not exist in the database schema:', error)
     }
 
-    const card = await db.card.create({
-      data: cardData
-    })
+    // Try to create the card with auto-generated ID
+    let card;
+    try {
+      card = await db.card.create({
+        data: cardData
+      })
+    } catch (error: any) {
+      // If there's a unique constraint violation on the ID field
+      if (error.code === 'P2002' && error.meta?.target?.includes('id')) {
+        console.log('ID constraint violation, trying with explicit ID');
+        
+        // Find the maximum existing ID
+        const maxIdResult = await db.card.aggregate({
+          _max: { id: true }
+        });
+        
+        const newId = (maxIdResult._max.id || 0) + 1;
+        
+        // Try creating the card with an explicit ID
+        card = await db.card.create({
+          data: {
+            ...cardData,
+            id: newId
+          }
+        });
+      } else {
+        // Re-throw the error if it's not an ID constraint violation
+        throw error;
+      }
+    }
+
+    // Create a corresponding DetailPage for the card
+    try {
+      const detailPage = await db.detailPage.create({
+        data: {
+          cardId: card.id,
+          content: `Detail page for ${card.title}`
+        }
+      })
+      console.log(`Created detail page ${detailPage.id} for card ${card.id}`)
+    } catch (error) {
+      console.error('Failed to create detail page for card:', error)
+      // Continue even if detail page creation fails
+    }
 
     // Create blocks if provided and if CardBlock model exists
     if (blocks && blocks.length > 0) {
