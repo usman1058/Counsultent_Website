@@ -41,7 +41,8 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  MessageCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -162,6 +163,26 @@ export default function AdminContactsPage() {
     window.URL.revokeObjectURL(url)
   }
 
+  const exportToJSON = () => {
+    const dataStr = JSON.stringify(filteredContacts, null, 2)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    
+    const exportFileDefaultName = `contacts_${new Date().toISOString().split('T')[0]}.json`
+    
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
+  }
+
+  const openWhatsApp = (phone: string) => {
+    // Remove any non-digit characters from the phone number
+    const cleanPhone = phone.replace(/\D/g, '')
+    
+    // Open WhatsApp with the cleaned phone number
+    window.open(`https://wa.me/${cleanPhone}`, '_blank')
+  }
+
   const getStatusBadge = (status?: string) => {
     const statusConfig = {
       new: { label: 'New', className: 'bg-blue-100 text-blue-800' },
@@ -207,10 +228,26 @@ export default function AdminContactsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Contact Requests</h1>
           <p className="text-gray-600">Manage student inquiries and follow-ups</p>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Export CSV
-        </Button>
+        <div className="flex space-x-2">
+          <div className="relative group">
+            <Button onClick={exportToCSV} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              Export to CSV format
+            </div>
+          </div>
+          <div className="relative group">
+            <Button onClick={exportToJSON} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export JSON
+            </Button>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              Export to JSON format
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -397,70 +434,90 @@ export default function AdminContactsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setSelectedContact(contact)}
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Contact Details</DialogTitle>
-                              <DialogDescription>
-                                Full information about this contact submission
-                              </DialogDescription>
-                            </DialogHeader>
-                            {selectedContact && (
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label>Name</Label>
-                                    <p className="font-medium">{selectedContact.name}</p>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openWhatsApp(contact.phone)}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedContact(contact)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Contact Details</DialogTitle>
+                                <DialogDescription>
+                                  Full information about this contact submission
+                                </DialogDescription>
+                              </DialogHeader>
+                              {selectedContact && (
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label>Name</Label>
+                                      <p className="font-medium">{selectedContact.name}</p>
+                                    </div>
+                                    <div>
+                                      <Label>Email</Label>
+                                      <p className="font-medium">{selectedContact.email}</p>
+                                    </div>
+                                    <div>
+                                      <Label>Phone</Label>
+                                      <div className="flex items-center space-x-2">
+                                        <p className="font-medium">{selectedContact.phone}</p>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => openWhatsApp(selectedContact.phone)}
+                                          className="text-green-600 hover:text-green-700"
+                                        >
+                                          <MessageCircle className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label>Purpose</Label>
+                                      <div className="mt-1">
+                                        {getPurposeBadge(selectedContact.purpose)}
+                                      </div>
+                                    </div>
                                   </div>
                                   <div>
-                                    <Label>Email</Label>
-                                    <p className="font-medium">{selectedContact.email}</p>
+                                    <Label>Message</Label>
+                                    <div className="mt-1 p-3 bg-gray-50 rounded-lg">
+                                      <p className="whitespace-pre-wrap">{selectedContact.message}</p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label>Phone</Label>
-                                    <p className="font-medium">{selectedContact.phone}</p>
-                                  </div>
-                                  <div>
-                                    <Label>Purpose</Label>
-                                    <div className="mt-1">
-                                      {getPurposeBadge(selectedContact.purpose)}
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label>Submitted Date</Label>
+                                      <p className="font-medium">
+                                        {new Date(selectedContact.createdAt).toLocaleString()}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label>Status</Label>
+                                      <div className="mt-1">
+                                        {getStatusBadge(selectedContact.status)}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                                <div>
-                                  <Label>Message</Label>
-                                  <div className="mt-1 p-3 bg-gray-50 rounded-lg">
-                                    <p className="whitespace-pre-wrap">{selectedContact.message}</p>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label>Submitted Date</Label>
-                                    <p className="font-medium">
-                                      {new Date(selectedContact.createdAt).toLocaleString()}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label>Status</Label>
-                                    <div className="mt-1">
-                                      {getStatusBadge(selectedContact.status)}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
