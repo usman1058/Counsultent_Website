@@ -128,15 +128,6 @@ export default function RootLayout({
           }}
         />
 
-        <Script id="monetag-interstitial" strategy="afterInteractive">
-          {`(function(s){
-              s.dataset.zone='10221463',
-              s.src='https://groleegni.net/vignette.min.js'
-            })([document.documentElement, document.body].filter(Boolean)
-            .pop()
-            .appendChild(document.createElement('script'))
-          )`}
-        </Script>
 
       </head>
 
@@ -146,6 +137,17 @@ export default function RootLayout({
         <Providers>
           <SmoothScroll />
           {children}
+
+          <Script id="monetag-interstitial" strategy="afterInteractive">
+            {`
+            document.addEventListener('DOMContentLoaded', function() {
+              var s = document.createElement('script');
+              s.dataset.zone = '10221463';
+              s.src = 'https://groleegni.net/vignette.min.js';
+              document.body.appendChild(s);
+            });
+          `}
+          </Script>
           <FloatingActionButton />
           <Toaster />
           <ToastNotifications />
