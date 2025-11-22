@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import Navbar from '@/components/navbar'
 import { motion } from 'framer-motion'
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  GraduationCap, 
-  FileText, 
+import {
+  Mail,
+  Phone,
+  MapPin,
+  GraduationCap,
+  FileText,
   DollarSign,
   Star,
   ArrowRight,
@@ -34,6 +34,7 @@ import {
   Gift
 } from 'lucide-react'
 import TestimonialsSection from '@/components/testimonials-section'
+import Script from 'next/script'
 
 export default function Home() {
   const [studyPages, setStudyPages] = useState<any[]>([])
@@ -48,12 +49,12 @@ export default function Home() {
           fetch('/api/admin/settings'),
           fetch('/api/testimonials')
         ])
-        
+
         if (studyRes.ok) {
           const studyData = await studyRes.json()
           setStudyPages(studyData.filter((page: any) => page.isActive !== false).slice(0, 6))
         }
-        
+
         if (settingsRes.ok) {
           const settingsData = await settingsRes.json()
           setSiteSettings(settingsData)
@@ -67,7 +68,7 @@ export default function Home() {
         console.error('Failed to fetch home data:', error)
       }
     }
-    
+
     fetchData()
   }, [])
   return (
@@ -95,7 +96,7 @@ export default function Home() {
             transition={{ duration: 30, repeat: Infinity, repeatType: "reverse" }}
           />
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
@@ -109,8 +110,8 @@ export default function Home() {
                   Certified Expert Visa Consultant
                 </Badge>
               </motion.div>
-              
-              <motion.h1 
+
+              <motion.h1
                 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -121,18 +122,18 @@ export default function Home() {
                   {siteSettings?.adminName || 'Hadi'}
                 </span>
               </motion.h1>
-              
-              <motion.p 
+
+              <motion.p
                 className="text-xl text-gray-600 leading-relaxed"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
               >
-                Your trusted partner for international education. Expert guidance for admissions, 
+                Your trusted partner for international education. Expert guidance for admissions,
                 scholarships, and visa applications to top universities worldwide.
               </motion.p>
-              
-              <motion.div 
+
+              <motion.div
                 className="flex flex-col sm:flex-row gap-4"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -163,8 +164,8 @@ export default function Home() {
                   </motion.div>
                 </Link>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="grid grid-cols-3 gap-6 pt-4"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -172,7 +173,7 @@ export default function Home() {
               >
                 <div className="text-center group">
                   <div className="flex items-center justify-center mb-2">
-                    <motion.div 
+                    <motion.div
                       className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300"
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
@@ -184,7 +185,7 @@ export default function Home() {
                 </div>
                 <div className="text-center group">
                   <div className="flex items-center justify-center mb-2">
-                    <motion.div 
+                    <motion.div
                       className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300"
                       whileHover={{ scale: 1.1, rotate: -5 }}
                     >
@@ -196,7 +197,7 @@ export default function Home() {
                 </div>
                 <div className="text-center group">
                   <div className="flex items-center justify-center mb-2">
-                    <motion.div 
+                    <motion.div
                       className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors duration-300"
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
@@ -208,8 +209,8 @@ export default function Home() {
                 </div>
               </motion.div>
             </div>
-            
-            <motion.div 
+
+            <motion.div
               className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -217,7 +218,7 @@ export default function Home() {
             >
               <div className="w-full h-96 bg-gradient-to-br from-primary/20 via-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
-                
+
                 {/* Floating elements */}
                 <motion.div
                   className="absolute top-8 right-8 w-16 h-16 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm"
@@ -226,7 +227,7 @@ export default function Home() {
                 >
                   <Trophy className="w-8 h-8 text-yellow-600" />
                 </motion.div>
-                
+
                 <motion.div
                   className="absolute bottom-8 left-8 w-16 h-16 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm"
                   animate={{ y: [0, 10, 0] }}
@@ -234,7 +235,7 @@ export default function Home() {
                 >
                   <Flag className="w-8 h-8 text-primary" />
                 </motion.div>
-                
+
                 <motion.div
                   className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                   animate={{ rotate: 360 }}
@@ -242,9 +243,9 @@ export default function Home() {
                 >
                   <div className="w-32 h-32 border-4 border-primary/20 rounded-full"></div>
                 </motion.div>
-                
+
                 <div className="text-center relative z-10">
-                  <motion.div 
+                  <motion.div
                     className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
                     whileHover={{ scale: 1.1, rotate: 10 }}
                     transition={{ duration: 0.3 }}
@@ -265,11 +266,22 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <div style={{ margin: '30px 0' }}>
+        <Script
+          id="adsterra-native-banner"
+          src="//pl28109920.effectivegatecpm.com/35d475c00efb91f3917f80c5594b9b0d/invoke.js"
+          strategy="afterInteractive"
+          data-cfasync="false"
+        />
+        <div id="container-35d475c00efb91f3917f80c5594b9b0d"></div>
+      </div>
+
+
 
       {/* About Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -284,7 +296,7 @@ export default function Home() {
               Your Trusted Education Consultant
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              With over 10 years of experience in international education consulting, 
+              With over 10 years of experience in international education consulting,
               I've helped hundreds of students achieve their dream of studying abroad.
             </p>
           </motion.div>
@@ -297,7 +309,7 @@ export default function Home() {
             >
               <Card className="h-full hover:shadow-xl transition-all duration-300 group border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
                 <CardHeader className="text-center">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300"
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
@@ -307,7 +319,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="text-center">
                   <p className="text-gray-600 leading-relaxed">
-                    Certified education consultant with specialized training in visa applications 
+                    Certified education consultant with specialized training in visa applications
                     and international admissions.
                   </p>
                   <div className="mt-4 flex items-center justify-center text-sm text-primary font-medium">
@@ -317,7 +329,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -326,7 +338,7 @@ export default function Home() {
             >
               <Card className="h-full hover:shadow-xl transition-all duration-300 group border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
                 <CardHeader className="text-center">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-50 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:from-green-200 group-hover:to-green-100 transition-all duration-300"
                     whileHover={{ scale: 1.1, rotate: -5 }}
                   >
@@ -336,7 +348,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="text-center">
                   <p className="text-gray-600 leading-relaxed">
-                    Successfully placed over 500 students in top universities across 
+                    Successfully placed over 500 students in top universities across
                     15+ countries worldwide.
                   </p>
                   <div className="mt-4 flex items-center justify-center text-sm text-green-600 font-medium">
@@ -346,7 +358,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -355,7 +367,7 @@ export default function Home() {
             >
               <Card className="h-full hover:shadow-xl transition-all duration-300 group border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
                 <CardHeader className="text-center">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:from-blue-200 group-hover:to-blue-100 transition-all duration-300"
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
@@ -365,7 +377,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="text-center">
                   <p className="text-gray-600 leading-relaxed">
-                    Extensive network of university partners and education agents 
+                    Extensive network of university partners and education agents
                     across multiple continents.
                   </p>
                   <div className="mt-4 flex items-center justify-center text-sm text-blue-600 font-medium">
@@ -382,7 +394,7 @@ export default function Home() {
       {/* Services Section */}
       <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -409,7 +421,7 @@ export default function Home() {
             >
               <Card className="h-full hover:shadow-2xl transition-all duration-500 group border-0 shadow-lg bg-gradient-to-br from-white to-green-50 hover:from-green-50 hover:to-green-100">
                 <CardHeader className="text-center">
-                  <motion.div 
+                  <motion.div
                     className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg"
                     whileHover={{ scale: 1.1, rotate: 6 }}
                   >
@@ -448,7 +460,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -457,7 +469,7 @@ export default function Home() {
             >
               <Card className="h-full hover:shadow-2xl transition-all duration-500 group border-0 shadow-lg bg-gradient-to-br from-white to-blue-50 hover:from-blue-50 hover:to-blue-100">
                 <CardHeader className="text-center">
-                  <motion.div 
+                  <motion.div
                     className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg"
                     whileHover={{ scale: 1.1, rotate: 6 }}
                   >
@@ -496,7 +508,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -505,7 +517,7 @@ export default function Home() {
             >
               <Card className="h-full hover:shadow-2xl transition-all duration-500 group border-0 shadow-lg bg-gradient-to-br from-white to-yellow-50 hover:from-yellow-50 hover:to-yellow-100">
                 <CardHeader className="text-center">
-                  <motion.div 
+                  <motion.div
                     className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg"
                     whileHover={{ scale: 1.1, rotate: 6 }}
                   >
@@ -574,8 +586,8 @@ export default function Home() {
                     <div className="relative h-56 overflow-hidden">
                       {page.bannerUrl ? (
                         <div className="relative w-full h-full">
-                          <img 
-                            src={page.bannerUrl} 
+                          <img
+                            src={page.bannerUrl}
                             alt={page.title}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
@@ -587,7 +599,7 @@ export default function Home() {
                           <div className="text-6xl">🌍</div>
                         </div>
                       )}
-                      
+
                       {/* Floating badges */}
                       <div className="absolute top-4 left-4">
                         <Badge className="bg-white/90 backdrop-blur-sm text-black px-3 py-1 shadow-lg">
@@ -601,7 +613,7 @@ export default function Home() {
                           Popular
                         </Badge>
                       </div>
-                      
+
                       {/* Country flag overlay */}
                       <div className="absolute bottom-4 left-4">
                         <div className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
@@ -609,7 +621,7 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -622,7 +634,7 @@ export default function Home() {
                         </div>
                       </div>
                     </CardHeader>
-                    
+
                     <CardContent className="pt-0">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -636,7 +648,7 @@ export default function Home() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <Link href={`/study/${page.slug}`}>
                         <motion.div
                           whileHover={{ scale: 1.02 }}
@@ -653,7 +665,7 @@ export default function Home() {
                 </motion.div>
               ))
             ) : (
-              <motion.div 
+              <motion.div
                 className="col-span-full text-center py-16"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -669,7 +681,7 @@ export default function Home() {
                     No Study Destinations Available
                   </h3>
                   <p className="text-gray-600 mb-8 leading-relaxed">
-                    We're currently updating our study destinations. Please check back soon or contact us directly 
+                    We're currently updating our study destinations. Please check back soon or contact us directly
                     to learn about available opportunities for studying abroad.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
