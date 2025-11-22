@@ -75,16 +75,6 @@ export default function Home() {
     <div className="min-h-screen">
       <Navbar />
 
-            <Script id="native-banner-interstitial" strategy="afterInteractive">
-        {`(function(s){
-            s.dataset.zone='10221463',
-            s.src='https://groleegni.net/vignette.min.js'
-          })([document.documentElement, document.body].filter(Boolean)
-          .pop()
-          .appendChild(document.createElement('script'))
-        )`}
-      </Script>
-
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-blue-500/5"></div>

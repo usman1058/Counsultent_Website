@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
 import SmoothScroll from "@/components/ui/smooth-scroll";
@@ -126,6 +127,17 @@ export default function RootLayout({
             }),
           }}
         />
+
+        <Script id="monetag-interstitial" strategy="afterInteractive">
+          {`(function(s){
+              s.dataset.zone='10221463',
+              s.src='https://groleegni.net/vignette.min.js'
+            })([document.documentElement, document.body].filter(Boolean)
+            .pop()
+            .appendChild(document.createElement('script'))
+          )`}
+        </Script>
+
       </head>
 
       <body
