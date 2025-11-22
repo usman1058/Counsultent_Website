@@ -266,15 +266,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <div style={{ margin: '30px 0' }}>
-        <Script
-          id="adsterra-native-banner"
-          src="//pl28109920.effectivegatecpm.com/35d475c00efb91f3917f80c5594b9b0d/invoke.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
-        <div id="container-35d475c00efb91f3917f80c5594b9b0d"></div>
-      </div>
+      
 
 
 
